@@ -1,0 +1,15 @@
+{
+  "excellent": "Excellent",
+  "good": "Good",
+  "normal": "Acceptable",
+  "bad": "Bad",
+  "configureWifiTitle": "Update Wi-Fi",
+  "configureWifiDescription": "Tap the icon to toggle the Wi-Fi form, then enter the SSID and password for your network.",
+  "ssidPlaceholder": "Network name (SSID)",
+  "passwordPlaceholder": "Network password",
+  "submitWifi": "Update Wi-Fi",
+  "wifiUpdatePending": "Updating Wi-Fi settings...",
+  "wifiUpdateSuccess": "Wi-Fi updated. Attempting to reconnect.",
+  "wifiUpdateFailed": "Wi-Fi update failed",
+  "wifiMissingFields": "Please enter both SSID and password."
+}
