@@ -1,0 +1,18 @@
+{
+  "name": "mmm-dailyweatherprompt",
+  "version": "1.0.0",
+  "description": "MagicMirror² module that prompts for a location and shows today's weather.",
+  "main": "MMM-DailyWeatherPrompt.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pcheek13/MMM-DailyWeatherPrompt.git"
+  },
+  "scripts": {
+    "start": "echo 'MagicMirror handles module loading'"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  },
+  "author": "pcheek13",
+  "license": "MIT"
+}
