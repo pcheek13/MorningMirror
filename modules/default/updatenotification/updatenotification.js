@@ -91,13 +91,13 @@ Module.register("updatenotification", {
 
 	addFilters () {
 		this.nunjucksEnvironment().addFilter("diffLink", (text, status) => {
-			if (status.module !== "MagicMirror") {
+			if (status.module !== "MorningMirror") {
 				return text;
 			}
 
 			const localRef = status.hash;
 			const remoteRef = status.tracking.replace(/.*\//, "");
-			return `<a href="https://github.com/MagicMirrorOrg/MagicMirror/compare/${localRef}...${remoteRef}" class="xsmall dimmed difflink" target="_blank">${text}</a>`;
+			return `<a href="https://github.com/MorningMirrorOrg/MorningMirror/compare/${localRef}...${remoteRef}" class="xsmall dimmed difflink" target="_blank">${text}</a>`;
 		});
 	},
 

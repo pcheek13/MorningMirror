@@ -35,7 +35,7 @@ class GitHelper {
 	async add (moduleName) {
 		let moduleFolder = `${global.root_path}`;
 
-		if (moduleName !== "MagicMirror") {
+		if (moduleName !== "MorningMirror") {
 			moduleFolder = `${moduleFolder}/modules/${moduleName}`;
 		}
 
@@ -67,7 +67,7 @@ class GitHelper {
 			isBehindInStatus: false
 		};
 
-		if (repo.module === "MagicMirror") {
+		if (repo.module === "MorningMirror") {
 			// the hash is only needed for the mm repo
 			const { stderr, stdout } = await this.execShell(`cd ${repo.folder} && git rev-parse HEAD`);
 
@@ -119,14 +119,14 @@ class GitHelper {
 			return;
 		}
 
-		if (gitInfo.isBehindInStatus && (gitInfo.module !== "MagicMirror" || gitInfo.current !== "master")) {
+		if (gitInfo.isBehindInStatus && (gitInfo.module !== "MorningMirror" || gitInfo.current !== "master")) {
 			return gitInfo;
 		}
 
 		const { stderr } = await this.execShell(`cd ${repo.folder} && git fetch -n --dry-run`);
 
 		// example output:
-		// From https://github.com/MagicMirrorOrg/MagicMirror
+		// From https://github.com/MorningMirrorOrg/MorningMirror
 		//    e40ddd4..06389e3  develop    -> origin/develop
 		// here the result is in stderr (this is a git default, don't ask why ...)
 		const matches = stderr.match(this.getRefRegex(gitInfo.current));
@@ -143,9 +143,9 @@ class GitHelper {
 			const { stdout } = await this.execShell(`cd ${repo.folder} && git rev-list --ancestry-path --count ${refDiff}`);
 			gitInfo.behind = parseInt(stdout);
 
-			// for MagicMirror-Repo and "master" branch avoid getting notified when no tag is in refDiff
+			// for MorningMirror-Repo and "master" branch avoid getting notified when no tag is in refDiff
 			// so only releases are reported and we can change e.g. the README.md without sending notifications
-			if (gitInfo.behind > 0 && gitInfo.module === "MagicMirror" && gitInfo.current === "master") {
+			if (gitInfo.behind > 0 && gitInfo.module === "MorningMirror" && gitInfo.current === "master") {
 				let tagList = "";
 				try {
 					const { stdout } = await this.execShell(`cd ${repo.folder} && git ls-remote -q --tags --refs`);
@@ -195,7 +195,7 @@ class GitHelper {
 
 		const allRepos = await this.gitResultList.map((module) => {
 			return new Promise((resolve) => {
-				if (module.behind > 0 && module.module !== "MagicMirror") {
+				if (module.behind > 0 && module.module !== "MorningMirror") {
 					Log.info(`Update found for module: ${module.module}`);
 					updates.push(module);
 				}

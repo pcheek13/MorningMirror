@@ -117,7 +117,7 @@ Module.register("MMM-Modulebar",{
 		// Makes sure the width and height is at least the defined minimum.
 		item.style.minWidth = self.config.minWidth;
 		item.style.minHeight = self.config.minHeight;
-		// Collects all modules loaded in MagicMirror.
+		// Collects all modules loaded in MorningMirror.
 		var modules = MM.getModules();
 		// When a button is clicked, the module either gets hidden or shown depending on current module status.
 		item.addEventListener("click", function () {

@@ -6,7 +6,7 @@ const NodeHelper = require("node_helper");
 
 const MAX_REDIRECTS = 3;
 const REQUEST_TIMEOUT = 15000;
-const DEFAULT_USER_AGENT = "MMM-BBCticker MagicMirror Module";
+const DEFAULT_USER_AGENT = "MMM-BBCticker MorningMirror Module";
 
 function requestFeed(urlString, redirectCount = 0, forcePlainText = false) {
   return new Promise((resolve, reject) => {

@@ -1,5 +1,5 @@
 /**
- * MagicMirror² (and MorningMirror forks)
+ * MorningMirror (and MorningMirror forks)
  * Module: MMM-WIFI
  *
  * By pcheek13 https://github.com/pcheek13/MMM-WIFI
@@ -27,7 +27,7 @@ Module.register("MMM-WIFI", {
         showVirtualKeyboard: true, // show a simple on-screen keyboard for SSID/password input
         wifiCommand: {
             executable: "/bin/bash",
-            args: ["/home/pcheek/MagicMirror/modules/MMM-WIFI/scripts/update-wifi.sh", "{ssid}", "{password}"],
+            args: ["/home/pcheek/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh", "{ssid}", "{password}"],
             timeout: 20000,
         },
         useSudoForWifiCommand: true,

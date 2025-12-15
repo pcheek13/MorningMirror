@@ -1,12 +1,8 @@
-/* Config Sample
+/* MorningMirror Configuration
  *
- * For more information on how you can configure this file
- * see https://docs.magicmirror.builders/configuration/introduction.html
- * and https://docs.magicmirror.builders/modules/configuration.html
- *
- * You can use environment variables using a `config.js.template` file instead of `config.js`
- * which will be converted to `config.js` while starting. For more information
- * see https://docs.magicmirror.builders/configuration/introduction.html#enviromnent-variables
+ * See README.md for quick setup and module guidance.
+ * Copy this file to config.js and adjust modules and options.
+ * You can also use config.js.template with environment variables if preferred.
  */
 let config = {
 	address: "localhost",	// Address to listen on, can be:
@@ -15,7 +11,7 @@ let config = {
 							// - "0.0.0.0", "::" to listen on any interface
 							// Default, when address config is left out or empty, is "localhost"
 	port: 8080,
-	basePath: "/",	// The URL path where MagicMirror² is hosted. If you are using a Reverse proxy
+	basePath: "/",	// The URL path where MorningMirror² is hosted. If you are using a Reverse proxy
 									// you must set the sub path here. basePath must end with a /
 	ipWhitelist: ["127.0.0.1", "::ffff:127.0.0.1", "::1"],	// Set [] to allow all IP addresses
 									// or add a specific IPv4 of 192.168.1.5 :
@@ -29,7 +25,7 @@ let config = {
 
 	language: "en",
 	locale: "en-US",   // this variable is provided as a consistent location
-			   // it is currently only used by 3rd party modules. no MagicMirror code uses this value
+			   // it is currently only used by 3rd party modules. no MorningMirror code uses this value
 			   // as we have no usage, we  have no constraints on what this field holds
 			   // see https://en.wikipedia.org/wiki/Locale_(computer_software) for the possibilities
 
@@ -47,7 +43,7 @@ let config = {
 		},
 		{
 		  module: "MMM-DailyWeatherPrompt",
-		  position: "top_left", // choose any MagicMirror position
+		  position: "top_left", // choose any MorningMirror position
 		  config: {
 		    units: "imperial", // or "metric"
 		    updateInterval: 10 * 60 * 1000, // 10 minutes
