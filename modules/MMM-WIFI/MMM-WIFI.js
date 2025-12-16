@@ -70,6 +70,8 @@ Module.register("MMM-WIFI", {
         wifiButton.style = `border:none;background:transparent;display:flex;align-items:center;justify-content:center;padding:10px;`
             + `width:${this.config.touchTargetSize}px;height:${this.config.touchTargetSize}px;`
             + `border-radius:12px;${pointerStyle}touch-action:manipulation;pointer-events:auto;user-select:none;`;
+        wifiButton.setAttribute("aria-expanded", String(this.formVisible));
+        wifiButton.setAttribute("aria-controls", "mmm-wifi-config-form");
 
         const wifiSign = document.createElement("img");
         wifiSign.draggable = false;
@@ -135,10 +137,12 @@ Module.register("MMM-WIFI", {
                     event.stopPropagation();
                 }
                 this.formVisible = !this.formVisible;
+                wifiButton.setAttribute("aria-expanded", String(this.formVisible));
                 this.updateDom(this.config.animationSpeed);
             };
 
             wifiButton.addEventListener("click", toggleForm, { passive: false });
+            wifiButton.addEventListener("touchend", toggleForm, { passive: false });
             wifiButton.addEventListener("keydown", event => {
                 if (event.code === "Space" || event.code === "Enter") {
                     toggleForm(event);
@@ -146,6 +150,7 @@ Module.register("MMM-WIFI", {
             });
 
             const formWrapper = document.createElement("div");
+            formWrapper.id = "mmm-wifi-config-form";
             formWrapper.style = `display: ${this.formVisible ? "flex" : "none"}; flex-direction: column; gap: 4px; font-size: 0.65em; max-width: 220px;`;
             const heading = document.createElement("div");
             heading.style = "font-weight:bold";

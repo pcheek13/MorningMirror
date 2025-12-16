@@ -43,7 +43,7 @@ rm -f "$TMP_NETWORK"
 # Reconfigure Wi-Fi and restart MorningMirror
 sudo wpa_cli -i wlan0 reconfigure || sudo systemctl restart wpa_supplicant.service
 
-PM2_PROCESS_NAME=${PM2_PROCESS_NAME:-mm}
+PM2_PROCESS_NAME=${PM2_PROCESS_NAME:-morningmirror}
 if command -v pm2 >/dev/null 2>&1; then
   if sudo pm2 describe "$PM2_PROCESS_NAME" >/dev/null 2>&1; then
     sudo pm2 restart "$PM2_PROCESS_NAME" --update-env || \

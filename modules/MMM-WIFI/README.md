@@ -64,7 +64,7 @@ This module ships with `scripts/update-wifi.sh`, which:
 
 - Backs up `/etc/wpa_supplicant/wpa_supplicant.conf`
 - Uses `wpa_passphrase` to append a secure network block for your SSID/password
-- Reconfigures Wi‑Fi and restarts MorningMirror via pm2 (default process name `mm`; override with `PM2_PROCESS_NAME`)
+- Reconfigures Wi‑Fi and restarts MorningMirror via pm2 (default process name `morningmirror`; override with `PM2_PROCESS_NAME`)
 
 If you need to recreate or inspect the helper, follow these explicit steps on your Raspberry Pi (all commands are copy/paste ready):
 
@@ -118,7 +118,7 @@ rm -f "$TMP_NETWORK"
 # Reconfigure Wi-Fi and restart MorningMirror
 sudo wpa_cli -i wlan0 reconfigure || sudo systemctl restart wpa_supplicant.service
 
-PM2_PROCESS_NAME=${PM2_PROCESS_NAME:-mm}
+PM2_PROCESS_NAME=${PM2_PROCESS_NAME:-morningmirror}
 if command -v pm2 >/dev/null 2>&1; then
   if sudo pm2 describe "$PM2_PROCESS_NAME" >/dev/null 2>&1; then
     sudo pm2 restart "$PM2_PROCESS_NAME" --update-env || \\
@@ -161,16 +161,14 @@ sudo /bin/bash /home/pi/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh "Y
 > CFG
 > ```
 
-> **Troubleshooting pm2 errors (`process or namespace mm not found` / `Use --update-env to update environment variables`)**
+> **Troubleshooting pm2 errors (`process or namespace morningmirror not found` / `Use --update-env to update environment variables`)**
 >
-> The helper restarts MorningMirror with pm2 using the process name in `PM2_PROCESS_NAME` (defaults to `mm`). If you see either er
-> ror above, ensure MorningMirror is running under pm2 and named correctly:
+> The helper restarts MorningMirror with pm2 using the process name in `PM2_PROCESS_NAME` (defaults to `morningmirror` to match the main installation snippet). If you see either error above, ensure MorningMirror is running under pm2 and named correctly:
 >
 > ```bash
-> pm2 list                      # confirm the process name
-> pm2 start mm.sh --name mm     # or use your existing start command/name
-> export PM2_PROCESS_NAME=mm    # set to your process name if different
+> pm2 list                                 # confirm the process name
+> pm2 start js/electron.js --name morningmirror  # or use your existing start command/name
+> export PM2_PROCESS_NAME=morningmirror    # set to your process name if different
 > ```
 >
-> The script already uses `--update-env` during restart; the error simply means pm2 could not find a process with the expected n
-> ame. Set the name, export `PM2_PROCESS_NAME`, and rerun the Wi‑Fi update.
+> The script already uses `--update-env` during restart; the error simply means pm2 could not find a process with the expected name. Set the name, export `PM2_PROCESS_NAME`, and rerun the Wi‑Fi update.
