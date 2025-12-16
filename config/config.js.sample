@@ -165,7 +165,7 @@ let config = {
     },
     {
       module: "compliments",
-      position: "center",
+      position: "middle_center",
       config: {
         wakeDisplayDuration: 25000,
         profileName: ""
@@ -173,7 +173,7 @@ let config = {
     },
     {
       module: "MMM-Modulebar",
-      position: "bottom_bar",
+      position: "bottom_center",
       config: {
         sleepAfterMinutes: 20,
         allowForce: true,
