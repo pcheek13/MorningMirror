@@ -5,6 +5,10 @@
  * You can also use config.js.template with environment variables if preferred.
  */
 const timeFormat = 24;
+const openWeatherApiKey =
+  typeof process !== "undefined" && process.env && process.env.OPENWEATHERMAP_API_KEY
+    ? process.env.OPENWEATHERMAP_API_KEY
+    : "";
 
 let config = {
   address: "localhost", // Address to listen on, can be:
@@ -92,7 +96,7 @@ let config = {
       position: "fullscreen_above",
       config: {
         particleCount: 100,
-        api_key: process.env.OPENWEATHERMAP_API_KEY || "",
+        api_key: openWeatherApiKey,
         locationID: 0,
         lat: 0,
         lon: 0,
