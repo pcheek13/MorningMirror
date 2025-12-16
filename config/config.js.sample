@@ -156,7 +156,7 @@ let config = {
                                 showVirtualKeyboard: true,
                                 wifiCommand: {
                                         executable: "/bin/bash",
-                                        args: ["/home/pcheek/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh", "{ssid}", "{password}"],
+                                        args: ["{modulePath}/scripts/update-wifi.sh", "{ssid}", "{password}"],
                                         timeout: 20000,
                                 },
                                 useSudoForWifiCommand: true,

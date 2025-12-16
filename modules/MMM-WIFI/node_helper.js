@@ -1,6 +1,8 @@
 const NodeHelper = require("node_helper");
 const ping = require("ping");
 const { execFile } = require("child_process");
+const fs = require("fs");
+const path = require("path");
 
 module.exports = NodeHelper.create({
     start: function() {
@@ -33,12 +35,28 @@ module.exports = NodeHelper.create({
             const { ssid, password } = payload;
             const command = config.wifiCommand || {};
             const executable = command.executable || "nmcli";
-            const argsTemplate = Array.isArray(command.args) ? command.args : [];
+            const moduleRoot = __dirname;
+            const moduleScript = path.join(moduleRoot, "scripts", "update-wifi.sh");
+            const argsTemplate = Array.isArray(command.args) && command.args.length
+                ? command.args
+                : ["{modulePath}/scripts/update-wifi.sh", "{ssid}", "{password}"];
             const timeout = command.timeout || 15000;
 
             const processedArgs = argsTemplate.map(arg =>
-                arg.replace("{ssid}", ssid).replace("{password}", password),
+                arg
+                    .replace("{modulePath}", moduleRoot)
+                    .replace("{ssid}", ssid)
+                    .replace("{password}", password),
             );
+
+            if (!fs.existsSync(moduleScript)) {
+                this.sendSocketNotification("MMM_WIFI_WIFI_UPDATE_STATUS", {
+                    success: false,
+                    messageKey: "wifiUpdateFailed",
+                    detail: `Wi-Fi helper script missing at ${moduleScript}`,
+                });
+                return;
+            }
 
             const finalExecutable = config.useSudoForWifiCommand ? "sudo" : executable;
             const finalArgs = config.useSudoForWifiCommand

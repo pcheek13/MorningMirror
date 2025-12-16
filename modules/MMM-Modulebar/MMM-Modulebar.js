@@ -54,15 +54,9 @@ Module.register("MMM-Modulebar",{
 			}
 		}
 	},
-	// Loads the jquery library (if not loaded already).
+	// No external scripts required.
 	getScripts: function() {
-		// Tried to fix a check if JQuery had already been loaded by something else. If not, then loaded it.
-		// Did not work... I'll try again later. :)
-//		if (typeof jQuery == "undefined") {
-			return ["modules/MMM-Modulebar/js/jquery.js"];
-//		} else {
-//			return;
-//		}
+		return [];
 	},
 
 	// Define required styles.
@@ -72,8 +66,9 @@ Module.register("MMM-Modulebar",{
 
 	// Override dom generator.
 	getDom: function() {
-		var overlay = document.createElement("div");
-		overlay.className = "paint-it-black";
+var overlay = document.createElement("div");
+overlay.className = "paint-it-black";
+overlay.style.transitionDuration = `${this.config.animationSpeed}ms`;
 		var menu = document.createElement("span");
 		menu.className = "modulebar-menu";
 		menu.id = this.identifier + "_menu";
@@ -113,166 +108,171 @@ Module.register("MMM-Modulebar",{
 		// If you just typed the symbol name, fas and fa- will be added (I'll keep this for compatibility).
 		} else {
 			var faclassName = "modulebar-picture fas fa-";
-		}
-		// Makes sure the width and height is at least the defined minimum.
-		item.style.minWidth = self.config.minWidth;
-		item.style.minHeight = self.config.minHeight;
-		// Collects all modules loaded in MorningMirror.
-		var modules = MM.getModules();
-		// When a button is clicked, the module either gets hidden or shown depending on current module status.
-		item.addEventListener("click", function () {
-			// If "all" is defined in a button, the hide all is triggered.
-			if (typeof data.gotoUrl !== 'undefined') {
-				if (data.gotoUrl === "back") {
-					window.history.back();
-				} else {
-					window.location.assign(data.gotoUrl);
-				}
-			}
-			if (data.module === "all") {
-				// Hiding all modules.
-				if (hidden) {
-					// Adding the black overlay.
-					$(overlay).fadeIn(self.config.animationSpeed);
-					// Set black overlay on this specific Z-Index.
-					$(item).css("z-index",self.config.zindex);
-					// Visability of the "unhide-button".
-					$(item).fadeTo(self.config.animationSpeed,self.config.visability);
-					// Sets the defined symbol for all hidden.
-					if (typeof data.symbol2 !== 'undefined') {
-						symbol.className = faclassName + data.symbol2;
-					// Set the size if it's set.
-					if (data.size) {
-						symbol.className += " fa-" + data.size;
-						symbol.className += data.size == 1 ? "g" : "x";
-					}
-					// Sets the defined image for all hidden.
-					} else if (typeof data.img2 !== 'undefined') {
-						image.className = "modulebar-picture";
-						image.src = data.img2;
-					}
-					// Sets the defined text for all hidden.
-					if (typeof data.text2 !== 'undefined') {
-						text.innerHTML = data.text2;
-					}
-					// Prints console.
-					console.log("Hiding all!");
-					// Sets the "flip flop".
-					hidden = false;
-				// Showing all modules.
-				} else {
-					// Removing the black overlay.
-					$(overlay).fadeOut(self.config.animationSpeed);
-					// Show the button fully again.
-					$(item).fadeTo(self.config.animationSpeed, 1);
-					// Sets the defined symbol for all shown.
-					if (typeof data.symbol !== 'undefined') {
-						symbol.className = faclassName + data.symbol;
-					// Set the size if it's set.
-					if (data.size) {
-						symbol.className += " fa-" + data.size;
-						symbol.className += data.size == 1 ? "g" : "x";
-					}
-					// Sets the defined image for all shown.
-					} else if (typeof data.img !== 'undefined') {
-						image.className = "modulebar-picture";
-						image.src = data.img;
-					}
-					// Sets the defined text for all shown.
-					if (typeof data.text !== 'undefined') {
-						text.innerHTML = data.text;
-					}
-					// Prints console.
-					console.log("Showing all!");
-					// Sets the "flip flop".
-					hidden = true;
-				}
-			} else {
-				// Lists through all modules for testing.
-				for (var i = 0; i < modules.length; i++) {
-				// Check if the current module is the one.
-				if (modules[i].name === data.module) {
-					// Splits out the module number of the module with the same name.
-					var idnr = modules[i].data.identifier.split("_");
-					// Check if the idnum is an array or not
-					if (Array.isArray(data.idnum)) {
-						// If it's an array, check what numbers are in it.
-						var idnumber = data.idnum.find(function(element) {
-							// Number of the module is found in the array.
-							return element == idnr[1]; 
-						});
-					// If idnum is not an array.
-					} else {
-						// Set the module id to hide.
-						var idnumber = data.idnum;
-					}
-					// Checks if idnum is set in config.js. If it is, it only hides that modules with those numbers and name, if not hides all modules with the same name.
-					if (idnr[1] == idnumber || data.idnum == null) {
-						// Check if the module is hidden.
-						if (modules[i].hidden) {
-							// Check if there is a "showURL" defined.
-							if (data.showUrl != null) {
-								// Visiting the show URL.
-								fetch(data.showUrl);
-								// Prints the visited hideURL.
-								console.log("Visiting show URL: "+data.showUrl);
-							}
-							// Shows the module.
-							modules[i].show(self.config.animationSpeed, 0, {force: self.config.allowForce});
-							// Sets the defined symbol for shown module.
-							if (typeof data.symbol !== 'undefined') {
-								symbol.className = faclassName + data.symbol;
-								// Set the size if it's set.
-								if (data.size) {
-									symbol.className += " fa-" + data.size;
-									symbol.className += data.size == 1 ? "g" : "x";
-								}
-							// Sets the defined image for shown module.
-							} else if (typeof data.img !== 'undefined') {
-								image.className = "modulebar-picture";
-								image.src = data.img;
-							}
-							// Sets the defined text for shown module.
-							if (typeof data.text !== 'undefined') {
-								text.innerHTML = data.text;
-							}
-							// Prints in the console what just happened (adding the ID). 
-							console.log("Showing "+modules[i].name+" ID: "+idnr[1]);
-						} else {
-							// Hides the module.
-							modules[i].hide(self.config.animationSpeed, 0, {force: self.config.allowForce});
-							// Sets the defined symbol for hidden module.
-							if (typeof data.symbol2 !== 'undefined') {
-								symbol.className = faclassName + data.symbol2;
-								// Set the size if it's set.
-								if (data.size) {
-									symbol.className += " fa-" + data.size;
-									symbol.className += data.size == 1 ? "g" : "x";
-								}
-							// Sets the defined image for hidden module.
-							} else if (typeof data.img2 !== 'undefined') {
-								image.className = "modulebar-picture";
-								image.src = data.img2;
-							}
-							// Sets the defined text for hidden module.
-							if (typeof data.text2 !== 'undefined') {
-								text.innerHTML = data.text2;
-							}
-							// Prints in the console what just happened (adding the ID). 
-							console.log("Hiding "+modules[i].name+" ID: "+idnr[1]);
-							// Check if there is a "hideURL" defined.
-							if (data.hideUrl != null) {
-								// Visiting the the URL.
-								fetch(data.hideUrl);
-								// Prints the visited hideURL.
-								console.log("Visiting hide URL: "+data.hideUrl);
-								}
-							}
-						}
-					}
-				}
-			}
-		});
+                // Makes sure the width and height is at least the defined minimum.
+                item.style.minWidth = self.config.minWidth;
+                item.style.minHeight = self.config.minHeight;
+                item.style.transition = `opacity ${self.config.animationSpeed}ms ease`;
+                // Collects all modules loaded in MorningMirror.
+                var modules = MM.getModules();
+                var setOverlayVisible = function(show) {
+                        overlay.classList.toggle("visible", show);
+                        overlay.style.transitionDuration = `${self.config.animationSpeed}ms`;
+                        if (show) {
+                                item.style.opacity = self.config.visability;
+                                item.style.zIndex = self.config.zindex;
+                        } else {
+                                item.style.opacity = 1;
+                                item.style.zIndex = "";
+                        }
+                };
+                // When a button is clicked, the module either gets hidden or shown depending on current module status.
+                item.addEventListener("click", function () {
+                        // If "all" is defined in a button, the hide all is triggered.
+                        if (typeof data.gotoUrl !== 'undefined') {
+                                if (data.gotoUrl === "back") {
+                                        window.history.back();
+                                } else {
+                                        window.location.assign(data.gotoUrl);
+                                }
+                        }
+                        if (data.module === "all") {
+                                // Hiding all modules.
+                                if (hidden) {
+                                        // Adding the black overlay.
+                                        setOverlayVisible(true);
+                                        // Sets the defined symbol for all hidden.
+                                        if (typeof data.symbol2 !== 'undefined') {
+                                                symbol.className = faclassName + data.symbol2;
+                                                // Set the size if it's set.
+                                                if (data.size) {
+                                                        symbol.className += " fa-" + data.size;
+                                                        symbol.className += data.size == 1 ? "g" : "x";
+                                                }
+                                        // Sets the defined image for all hidden.
+                                        } else if (typeof data.img2 !== 'undefined') {
+                                                image.className = "modulebar-picture";
+                                                image.src = data.img2;
+                                        }
+                                        // Sets the defined text for all hidden.
+                                        if (typeof data.text2 !== 'undefined') {
+                                                text.innerHTML = data.text2;
+                                        }
+                                        // Prints console.
+                                        console.log("Hiding all!");
+                                        // Sets the "flip flop".
+                                        hidden = false;
+                                // Showing all modules.
+                                } else {
+                                        // Removing the black overlay.
+                                        setOverlayVisible(false);
+                                        // Sets the defined symbol for all shown.
+                                        if (typeof data.symbol !== 'undefined') {
+                                                symbol.className = faclassName + data.symbol;
+                                                // Set the size if it's set.
+                                                if (data.size) {
+                                                        symbol.className += " fa-" + data.size;
+                                                        symbol.className += data.size == 1 ? "g" : "x";
+                                                }
+                                        // Sets the defined image for all shown.
+                                        } else if (typeof data.img !== 'undefined') {
+                                                image.className = "modulebar-picture";
+                                                image.src = data.img;
+                                        }
+                                        // Sets the defined text for all shown.
+                                        if (typeof data.text !== 'undefined') {
+                                                text.innerHTML = data.text;
+                                        }
+                                        // Prints console.
+                                        console.log("Showing all!");
+                                        // Sets the "flip flop".
+                                        hidden = true;
+                                }
+                        } else {
+                                // Lists through all modules for testing.
+                                for (var i = 0; i < modules.length; i++) {
+                                        // Check if the current module is the one.
+                                        if (modules[i].name === data.module) {
+                                                // Splits out the module number of the module with the same name.
+                                                var idnr = modules[i].data.identifier.split("_");
+                                                // Check if the idnum is an array or not
+                                                if (Array.isArray(data.idnum)) {
+                                                        // If it's an array, check what numbers are in it.
+                                                        var idnumber = data.idnum.find(function(element) {
+                                                                // Number of the module is found in the array.
+                                                                return element == idnr[1];
+                                                        });
+                                                // If idnum is not an array.
+                                                } else {
+                                                        // Set the module id to hide.
+                                                        var idnumber = data.idnum;
+                                                }
+                                                // Checks if idnum is set in config.js. If it is, it only hides that modules with those numbers and name, if not hides all modules with the same name.
+                                                if (idnr[1] == idnumber || data.idnum == null) {
+                                                        // Check if the module is hidden.
+                                                        if (modules[i].hidden) {
+                                                                // Check if there is a "showURL" defined.
+                                                                if (data.showUrl != null) {
+                                                                        // Visiting the show URL.
+                                                                        fetch(data.showUrl);
+                                                                        // Prints the visited hideURL.
+                                                                        console.log("Visiting show URL: " + data.showUrl);
+                                                                }
+                                                                // Shows the module.
+                                                                modules[i].show(self.config.animationSpeed, 0, {force: self.config.allowForce});
+                                                                // Sets the defined symbol for shown module.
+                                                                if (typeof data.symbol !== 'undefined') {
+                                                                        symbol.className = faclassName + data.symbol;
+                                                                        // Set the size if it's set.
+                                                                        if (data.size) {
+                                                                                symbol.className += " fa-" + data.size;
+                                                                                symbol.className += data.size == 1 ? "g" : "x";
+                                                                        }
+                                                                // Sets the defined image for shown module.
+                                                                } else if (typeof data.img !== 'undefined') {
+                                                                        image.className = "modulebar-picture";
+                                                                        image.src = data.img;
+                                                                }
+                                                                // Sets the defined text for shown module.
+                                                                if (typeof data.text !== 'undefined') {
+                                                                        text.innerHTML = data.text;
+                                                                }
+                                                                // Prints in the console what just happened (adding the ID).
+                                                                console.log("Showing " + modules[i].name + " ID: " + idnr[1]);
+                                                        } else {
+                                                                // Hides the module.
+                                                                modules[i].hide(self.config.animationSpeed, 0, {force: self.config.allowForce});
+                                                                // Sets the defined symbol for hidden module.
+                                                                if (typeof data.symbol2 !== 'undefined') {
+                                                                        symbol.className = faclassName + data.symbol2;
+                                                                        // Set the size if it's set.
+                                                                        if (data.size) {
+                                                                                symbol.className += " fa-" + data.size;
+                                                                                symbol.className += data.size == 1 ? "g" : "x";
+                                                                        }
+                                                                // Sets the defined image for hidden module.
+                                                                } else if (typeof data.img2 !== 'undefined') {
+                                                                        image.className = "modulebar-picture";
+                                                                        image.src = data.img2;
+                                                                }
+                                                                // Sets the defined text for hidden module.
+                                                                if (typeof data.text2 !== 'undefined') {
+                                                                        text.innerHTML = data.text2;
+                                                                }
+                                                                // Prints in the console what just happened (adding the ID).
+                                                                console.log("Hiding " + modules[i].name + " ID: " + idnr[1]);
+                                                                // Check if there is a "hideURL" defined.
+                                                                if (data.hideUrl != null) {
+                                                                        // Visiting the the URL.
+                                                                        fetch(data.hideUrl);
+                                                                        // Prints the visited hideURL.
+                                                                        console.log("Visiting hide URL: " + data.hideUrl);
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
+                });
 		// Fixes the aligning.
 		item.style.flexDirection = {
 			"right"  : "row-reverse",
