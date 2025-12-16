@@ -9,10 +9,10 @@
 Module.register("MMM-WIFI", {
     // Default module config
     defaults: {
-        updateInterval: 1000 * 5, // check network every seconds
+        updateInterval: 1000 * 30, // check network every 30 seconds to avoid rapid blinking
         maxTimeout: 1000, // maximum timeout
-        animationSpeed: 1000 * 0.25, // fade effect
-        initialLoadDelay: 1000 * 3, // first check delay
+        animationSpeed: 0, // disable fade effect to prevent flicker
+        initialLoadDelay: 1000 * 5, // first check delay
         server: "8.8.8.8", // Server to check network connection. Default 8.8.8.8 is a Google DNS server
         showMessage: true,
         thresholds: {
@@ -27,7 +27,7 @@ Module.register("MMM-WIFI", {
         showVirtualKeyboard: true, // show a simple on-screen keyboard for SSID/password input
         wifiCommand: {
             executable: "/bin/bash",
-            args: ["/home/pi/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh", "{ssid}", "{password}"],
+            args: ["/home/pcheek/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh", "{ssid}", "{password}"],
             timeout: 20000,
         },
         useSudoForWifiCommand: true,
