@@ -22,6 +22,23 @@ The `npm ci --omit=dev` step installs only the runtime dependencies (Electron in
 
 If PM2 prints a `pm2 startup ...` command, run it exactly as shown to register the service with systemd. After a reboot, the `morningmirror` process will start automatically.
 
+## Manage PM2 auto start
+Use these commands when you need to disable or re-enable PM2 boot startup for MorningMirror:
+
+- Stop MorningMirror and remove it from PM2 auto start:
+  ```bash
+  pm2 stop morningmirror && pm2 delete morningmirror && pm2 unstartup
+  ```
+- Re-enable PM2 auto start (assumes the repo lives in `~/MorningMirror`):
+  ```bash
+  cd ~/MorningMirror && \
+    pm2 start npm --name morningmirror -- start && \
+    pm2 save && \
+    pm2 startup
+  ```
+
+If `pm2 startup` prints a command, run it verbatim so systemd registers the service. Reboot once to confirm MorningMirror starts on its own.
+
 ## Key features
 - Modular layout with server and client components ready for custom modules, mirroring the familiar Magic Mirror scaffolding.
 - Electron-powered shell for kiosk-style full-screen operation.
@@ -46,6 +63,8 @@ MorningMirror ships with a curated set of node modules to mirror the original ex
    ```
 2. Update modules, API keys, or layout regions within `config/config.js` to suit your display.
 3. Restart MorningMirror to apply changes (`npm run start:x11` or restart the PM2 process).
+
+The default configuration ships with the MMM-Modulebar docked in the bottom-right corner so you can toggle core modules on or off without editing the config file.
 
 ## Troubleshooting common install errors
 - **`node: bad option: --run` when running `npm start`**: Older Node releases on Raspberry Pi OS do not ship with the experimental `--run` flag. The start scripts now call Electron directly; pull the latest changes and rerun `npm ci --omit=dev`.

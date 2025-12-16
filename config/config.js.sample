@@ -84,11 +84,11 @@ let config = {
 				lon: -73.971321
 			}
 		},
-		{
-			module: "newsfeed",
-			position: "bottom_bar",
-			config: {
-				feeds: [
+                {
+                        module: "newsfeed",
+                        position: "bottom_bar",
+                        config: {
+                                feeds: [
 					{
 						title: "New York Times",
 						url: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
@@ -98,9 +98,39 @@ let config = {
 				showPublishDate: true,
 				broadcastNewsFeeds: true,
 				broadcastNewsUpdates: true
-			}
-		},
-	]
+                        }
+                },
+                {
+                        module: "MMM-Modulebar",
+                        position: "bottom_right",
+                        config: {
+                                direction: "row",
+                                buttons: {
+                                        "1": {
+                                                module: "clock",
+                                                symbol: "clock"
+                                        },
+                                        "2": {
+                                                module: "calendar",
+                                                symbol: "calendar-check"
+                                        },
+                                        "3": {
+                                                module: "weather",
+                                                symbol: "cloud-sun"
+                                        },
+                                        "4": {
+                                                module: "newsfeed",
+                                                symbol: "newspaper"
+                                        },
+                                        "99": {
+                                                module: "all",
+                                                symbol: "toggle-on",
+                                                symbol2: "toggle-off"
+                                        }
+                                }
+                        }
+                },
+        ]
 };
 
 /*************** DO NOT EDIT THE LINE BELOW ***************/
