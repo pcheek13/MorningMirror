@@ -27,7 +27,7 @@ Module.register("MMM-WIFI", {
         showVirtualKeyboard: true, // show a simple on-screen keyboard for SSID/password input
         wifiCommand: {
             executable: "/bin/bash",
-            args: ["/home/pcheek/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh", "{ssid}", "{password}"],
+            args: ["/home/pi/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh", "{ssid}", "{password}"],
             timeout: 20000,
         },
         useSudoForWifiCommand: true,
@@ -138,9 +138,7 @@ Module.register("MMM-WIFI", {
                 this.updateDom(this.config.animationSpeed);
             };
 
-            ["click", "pointerdown", "pointerup", "touchend"].forEach(evt => {
-                wifiButton.addEventListener(evt, toggleForm, { passive: false });
-            });
+            wifiButton.addEventListener("click", toggleForm, { passive: false });
             wifiButton.addEventListener("keydown", event => {
                 if (event.code === "Space" || event.code === "Enter") {
                     toggleForm(event);
