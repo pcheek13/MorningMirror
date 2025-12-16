@@ -88,6 +88,7 @@ MMM-WIFI now resolves its helper script using `{modulePath}` and ships with the 
     npm start
   ```
 - **PM2 stuck in `stopped` state**: Ensure PM2 is using the npm script (`pm2 start npm --name morningmirror -- start`) and that your display server is available (`DISPLAY=:0` for X11 or `WAYLAND_DISPLAY=wayland-1` for Wayland).
+- **Modulebar buttons not visible**: The Modulebar now pulls Font Awesome directly from MorningMirror's shared `/css/font-awesome.css`. Pull the latest code, restart (`pm2 restart morningmirror` or `npm start`), and reload the browser cache if the icons still look blank.
 
 ## Contributing
 Issues and pull requests are welcome at [github.com/pcheek13/MorningMirror](https://github.com/pcheek13/MorningMirror). Keep changes small, add tests where possible, and follow the included linting tools before committing.

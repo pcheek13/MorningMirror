@@ -89,7 +89,7 @@ Module.register("MMM-Modulebar", {
 
   // Define required styles.
   getStyles() {
-    return ["font-awesome.css", "MMM-Modulebar.css"];
+    return ["/css/font-awesome.css", "MMM-Modulebar.css"];
   },
 
   // Override dom generator.
