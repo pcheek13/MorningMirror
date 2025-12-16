@@ -109,7 +109,12 @@ Module.register("MMM-DynamicWeather", {
         this.weatherTimeout = null;
         this.holidayTimeout = null;
         this.allEffects = [];
-        this.url = "https://api.openweathermap.org/data/2.5/weather?appid=" + this.config.api_key;
+        this.apiKey = this.config.api_key || this.config.apiKey;
+        this.hasApiKey = !!this.apiKey;
+        if (!this.hasApiKey) {
+            Log.error("[MMM-DynamicWeather] No api_key provided. Set api_key in config or OPENWEATHERMAP_API_KEY in the environment.");
+        }
+        this.url = this.hasApiKey ? "https://api.openweathermap.org/data/2.5/weather?appid=" + this.apiKey : "";
         if (this.config.lat && this.config.lon) {
             this.url += "&lat=" + this.config.lat + "&lon=" + this.config.lon;
         }
@@ -159,7 +164,10 @@ Module.register("MMM-DynamicWeather", {
         else {
             this.holidayLoaded = true;
         }
-        if (!this.config.alwaysDisplay) {
+        if (!this.hasApiKey) {
+            this.weatherLoaded = true;
+        }
+        else if (!this.config.alwaysDisplay) {
             this.getWeather(this);
         }
         else {
@@ -669,6 +677,10 @@ Module.register("MMM-DynamicWeather", {
         }
     },
     getWeather: function (_this) {
+        if (!_this.hasApiKey) {
+            console.error("[MMM-DynamicWeather] Skipping weather fetch because api_key is missing.");
+            return;
+        }
         _this.sendSocketNotification("API-Fetch", _this.url);
         _this.weatherTimeout = setTimeout(_this.getWeather, _this.config.weatherInterval, _this);
     },

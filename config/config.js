@@ -92,7 +92,7 @@ let config = {
       position: "fullscreen_above",
       config: {
         particleCount: 100,
-        api_key: "",
+        api_key: process.env.OPENWEATHERMAP_API_KEY || "",
         locationID: 0,
         lat: 0,
         lon: 0,
