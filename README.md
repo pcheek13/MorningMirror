@@ -10,9 +10,9 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
   sudo apt update && sudo apt install -y git nodejs && \
   git clone https://github.com/pcheek13/MorningMirror.git && \
   cd MorningMirror && \
-  npm install && \
+  ELECTRON_SKIP_BINARY_DOWNLOAD=1 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install && \
   cp config/config.js.sample config/config.js && \
-  npm install -g pm2 && \
+  sudo npm install -g pm2 && \
   pm2 start js/electron.js --name morningmirror && \
   pm2 save && \
   pm2 startup
@@ -33,7 +33,7 @@ MorningMirror ships with a curated set of node modules to mirror the original ex
 - UI/templating: Nunjucks, Handlebars
 - Utilities: Moment & Moment-Timezone, Day.js, Suncalc, Croner, Envsub
 - Diagnostics and logging: Console-stamp, Roarr, Shimmer
-- Routing and middleware: Express-IPFilter, Helmet, Router
+- Routing and middleware: Helmet plus built-in CIDR/IP whitelisting
 - Front-end assets: Font Awesome, Animate.css, Weather Icons, Roboto fonts
 - Quality tooling: ESLint, Stylelint, Prettier, Markdownlint, CSpell, Jest, Playwright
 
