@@ -64,7 +64,7 @@ MorningMirror ships with a curated set of node modules to mirror the original ex
    cp config/config.js.sample config/config.js
    ```
 2. Update modules, API keys, or layout regions within `config/config.js` to suit your display.
-   - The default MMM-DynamicWeather block now reads the `OPENWEATHERMAP_API_KEY` environment variable automatically; set it before starting PM2 or edit `api_key` directly in the config file.
+   - The default MMM-DynamicWeather block now reads the `OPENWEATHERMAP_API_KEY` environment variable automatically when MorningMirror runs under Node; if that variable is missing, the key stays blank so the browser never throws a `process is not defined` error. Set the variable before starting PM2 or edit `api_key` directly in the config file.
 3. Restart MorningMirror to apply changes (`npm run start:x11` or restart the PM2 process).
 
 The default configuration ships with the MMM-Modulebar docked on the `bottom_center` region so you can toggle core modules on or off without editing the config file. The bar follows the [MMM-Modulebar README](modules/MMM-Modulebar/README.md) defaults (Font Awesome icons plus text, 64px minimum buttons, and a wake/sleep toggle) and includes buttons for DynamicWeather effects, DailyWeatherPrompt, Wi-Fi, compliments, and the clock alongside the always-on settings gear. The clock anchors to the top center, MMM-DailyWeatherPrompt sits in the top-left, the lightweight MMM-WIFI indicator lives in the top-right, the compliments module sits in the middle-center region, and MMM-DynamicWeather still renders full-screen weather effects. Set your OpenWeatherMap API key in `MMM-DynamicWeather` and optionally prefill `location` for `MMM-DailyWeatherPrompt` if you do not want the on-screen prompt.
