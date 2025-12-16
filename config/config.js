@@ -36,96 +36,153 @@ let config = {
         modules: [
                 {
                         module: "alert",
+                        config: {
+                                effect: "slide",
+                                alert_effect: "jelly",
+                                display_time: 3500,
+                                position: "center",
+                                welcome_message: false
+                        }
                 },
                 {
                         module: "updatenotification",
-                        position: "top_bar"
+                        position: "top_bar",
+                        config: {
+                                updateInterval: 10 * 60 * 1000,
+                                refreshInterval: 24 * 60 * 60 * 1000,
+                                ignoreModules: [],
+                                sendUpdatesNotifications: false,
+                                updates: [],
+                                updateTimeout: 2 * 60 * 1000,
+                                updateAutorestart: false,
+                                useModulesFromConfig: true
+                        }
                 },
                 {
                         module: "clock",
                         position: "top_left",
-                },
-                {
-                        module: "calendar",
-                        header: "US Holidays",
-                        position: "top_left",
                         config: {
-                                calendars: [
-                                        {
-                                                fetchInterval: 7 * 24 * 60 * 60 * 1000,
-                                                symbol: "calendar-check",
-                                                url: "https://ics.calendarlabs.com/76/mm3137/US_Holidays.ics"
-                                        }
-                                ]
+                                displayType: "digital",
+                                timeFormat: config.timeFormat,
+                                timezone: null,
+                                displaySeconds: true,
+                                showPeriod: true,
+                                showPeriodUpper: false,
+                                clockBold: false,
+                                showDate: true,
+                                showTime: true,
+                                showWeek: false,
+                                dateFormat: "dddd, LL",
+                                sendNotifications: false,
+                                analogSize: "200px",
+                                analogFace: "simple",
+                                analogPlacement: "bottom",
+                                analogShowDate: "top",
+                                secondsColor: "#888888",
+                                showSunTimes: false,
+                                showMoonTimes: false,
+                                lat: 47.630539,
+                                lon: -122.344147
                         }
                 },
                 {
-                        module: "compliments",
-                        position: "lower_third"
+                        module: "MMM-DynamicWeather",
+                        position: "fullscreen_above",
+                        config: {
+                                particleCount: 100,
+                                api_key: "",
+                                locationID: 0,
+                                lat: 0,
+                                lon: 0,
+                                weatherInterval: 600000,
+                                alwaysDisplay: "",
+                                zIndex: 99,
+                                opacity: 1,
+                                fadeDuration: 3000,
+                                effectDuration: 120000,
+                                effectDelay: 60000,
+                                realisticClouds: false,
+                                hideSun: false,
+                                hideMoon: false,
+                                hideSnow: false,
+                                hideSnowman: true,
+                                hideRain: false,
+                                hideFlower: true,
+                                hideClouds: false,
+                                hideFog: false,
+                                hideLightning: false,
+                                lightning1Count: 2,
+                                lightning2Count: 3,
+                                sequential: "",
+                                sunImage: "sun_right",
+                                effects: []
+                        }
                 },
                 {
-                        module: "weather",
+                        module: "MMM-DailyWeatherPrompt",
                         position: "top_right",
                         config: {
-                                weatherProvider: "openmeteo",
-                                type: "current",
-                                lat: 40.776676,
-                                lon: -73.971321
+                                location: "",
+                                units: "imperial",
+                                updateInterval: 10 * 60 * 1000,
+                                promptText: "Enter City, ST or ZIP",
+                                showFeelsLike: true,
+                                showHumidity: true,
+                                showWind: true,
+                                allowLocationChange: true
                         }
                 },
                 {
-                        module: "weather",
-                        position: "top_right",
-                        header: "Weather Forecast",
+                        module: "MMM-WIFI",
+                        position: "bottom_left",
                         config: {
-                                weatherProvider: "openmeteo",
-                                type: "forecast",
-                                lat: 40.776676,
-                                lon: -73.971321
-                        }
-                },
-                {
-                        module: "newsfeed",
-                        position: "bottom_bar",
-                        config: {
-                                feeds: [
-                                        {
-                                                title: "New York Times",
-                                                url: "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml"
-                                        }
-                                ],
-                                showSourceTitle: true,
-                                showPublishDate: true,
-                                broadcastNewsFeeds: true,
-                                broadcastNewsUpdates: true
+                                updateInterval: 1000 * 5,
+                                maxTimeout: 1000,
+                                animationSpeed: 1000 * 0.25,
+                                initialLoadDelay: 1000 * 3,
+                                server: "8.8.8.8",
+                                showMessage: true,
+                                thresholds: {
+                                        strong: 50,
+                                        medium: 150,
+                                        weak: 500,
+                                },
+                                flexDirection: "row",
+                                scale: 0.45,
+                                touchTargetSize: 96,
+                                allowWifiUpdates: true,
+                                showVirtualKeyboard: true,
+                                wifiCommand: {
+                                        executable: "/bin/bash",
+                                        args: ["/home/pi/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh", "{ssid}", "{password}"],
+                                        timeout: 20000,
+                                },
+                                useSudoForWifiCommand: true,
                         }
                 },
                 {
                         module: "MMM-Modulebar",
                         position: "bottom_right",
                         config: {
+                                allowForce: false,
+                                showBorder: true,
+                                minWidth: "0px",
+                                minHeight: "0px",
+                                picturePlacement: "left",
                                 direction: "row",
+                                animationSpeed: 1000,
+                                zindex: 1000,
+                                visability: 0.5,
                                 buttons: {
                                         "1": {
-                                                module: "clock",
-                                                symbol: "clock"
-                                        },
-                                        "2": {
-                                                module: "calendar",
-                                                symbol: "calendar-check"
-                                        },
-                                        "3": {
-                                                module: "weather",
-                                                symbol: "cloud-sun"
-                                        },
-                                        "4": {
-                                                module: "newsfeed",
-                                                symbol: "newspaper"
-                                        },
-                                        "99": {
                                                 module: "all",
                                                 symbol: "toggle-on",
-                                                symbol2: "toggle-off"
+                                                symbol2: "toggle-off",
+                                        },
+                                        "2": {
+                                                module: "clock",
+                                                symbol: "bell",
+                                                symbol2: "bell-slash",
                                         }
                                 }
                         }
