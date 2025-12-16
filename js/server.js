@@ -3,7 +3,7 @@ const http = require("node:http");
 const https = require("node:https");
 const path = require("node:path");
 const express = require("express");
-const ipfilter = require("express-ipfilter").IpFilter;
+const ipaddr = require("ipaddr.js");
 const helmet = require("helmet");
 const socketio = require("socket.io");
 const Log = require("logger");
@@ -17,10 +17,52 @@ const vendor = require(`${__dirname}/vendor`);
  * @class
  */
 function Server (config) {
-	const app = express();
-	const port = process.env.MM_PORT || config.port;
-	const serverSockets = new Set();
-	let server = null;
+        const app = express();
+        const port = process.env.MM_PORT || config.port;
+        const serverSockets = new Set();
+        let server = null;
+
+        const whitelistEntries = Array.isArray(config.ipWhitelist) ? config.ipWhitelist : [];
+
+        if (!Array.isArray(config.ipWhitelist)) {
+                Log.warn("ipWhitelist is not an array; falling back to an empty whitelist (all IPs allowed).");
+        }
+
+        const parsedWhitelist = whitelistEntries.map((entry) => {
+                const [address, prefix] = entry.split("/");
+                const parsedAddress = ipaddr.parse(address);
+
+                if (parsedAddress.kind() === "ipv6" && parsedAddress.isIPv4MappedAddress()) {
+                        return {
+                                address: parsedAddress.toIPv4Address(),
+                                prefix: prefix ? Number.parseInt(prefix, 10) : undefined,
+                                isMapped: true
+                        };
+                }
+
+                return {
+                        address: parsedAddress,
+                        prefix: prefix ? Number.parseInt(prefix, 10) : undefined,
+                        isMapped: false
+                };
+        });
+
+        const isWhitelisted = (clientIp) => {
+                if (whitelistEntries.length === 0) return true;
+
+                const parsedIp = ipaddr.parse(clientIp);
+                const normalizedIp = parsedIp.kind() === "ipv6" && parsedIp.isIPv4MappedAddress()
+                        ? parsedIp.toIPv4Address()
+                        : parsedIp;
+
+                return parsedWhitelist.some(({ address, prefix }) => {
+                        if (prefix) {
+                                return normalizedIp.match([address, prefix]);
+                        }
+
+                        return normalizedIp.toNormalizedString() === address.toNormalizedString();
+                });
+        };
 
 	/**
 	 * Opens the server for incoming connections
@@ -80,20 +122,24 @@ function Server (config) {
 
 			server.listen(port, config.address || "localhost");
 
-			if (config.ipWhitelist instanceof Array && config.ipWhitelist.length === 0) {
-				Log.warn("You're using a full whitelist configuration to allow for all IPs");
-			}
+                        if (Array.isArray(config.ipWhitelist) && whitelistEntries.length === 0) {
+                                Log.warn("You're using a full whitelist configuration to allow for all IPs");
+                        }
 
-			app.use(function (req, res, next) {
-				ipfilter(config.ipWhitelist, { mode: config.ipWhitelist.length === 0 ? "deny" : "allow", log: false })(req, res, function (err) {
-					if (err === undefined) {
-						res.header("Access-Control-Allow-Origin", "*");
-						return next();
-					}
-					Log.log(err.message);
-					res.status(403).send("This device is not allowed to access your mirror. <br> Please check your config.js or config.js.sample to change this.");
-				});
-			});
+                        app.use((req, res, next) => {
+                                try {
+                                        if (isWhitelisted(req.ip)) {
+                                                res.header("Access-Control-Allow-Origin", "*");
+                                                return next();
+                                        }
+                                } catch (err) {
+                                        Log.warn(`Unable to validate client IP '${req.ip}': ${err.message}`);
+                                        return res.status(400).send("Unable to validate IP address. Please review your whitelist settings.");
+                                }
+
+                                Log.log(`Blocked request from ${req.ip}; update your ipWhitelist to allow access.`);
+                                res.status(403).send("This device is not allowed to access your mirror. <br> Please check your config.js or config.js.sample to change this.");
+                        });
 
 			app.use(helmet(config.httpHeaders));
 			app.use("/js", express.static(__dirname));
