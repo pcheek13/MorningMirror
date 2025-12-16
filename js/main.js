@@ -107,7 +107,7 @@ const MM = (function () {
 	 * Update the dom for a specific module.
 	 * @param {Module} module The module that needs an update.
 	 * @param {object|number} [updateOptions] The (optional) number of microseconds for the animation or object with updateOptions (speed/animates)
-	 * @param {boolean} [createAnimatedDom] for displaying only animateIn (used on first start of MagicMirror)
+	 * @param {boolean} [createAnimatedDom] for displaying only animateIn (used on first start of MorningMirror)
 	 * @returns {Promise} Resolved when the dom is fully updated.
 	 */
 	const updateDom = function (module, updateOptions, createAnimatedDom = false) {
@@ -582,7 +582,7 @@ const MM = (function () {
 		 * Main init method.
 		 */
 		async init () {
-			Log.info("Initializing MagicMirror².");
+			Log.info("Initializing MorningMirror.");
 			loadConfig();
 
 			Log.setLogLevel(config.logLevel);
@@ -620,7 +620,7 @@ const MM = (function () {
 							Log.warn("Refreshing Website because server was restarted");
 						}
 					} catch (err) {
-						Log.error(`MagicMirror not reachable: ${err}`);
+						Log.error(`MorningMirror not reachable: ${err}`);
 					}
 				}, config.checkServerInterval);
 			}

@@ -255,7 +255,7 @@ Module.register("clock", {
 				analogWrapper.style.background = `url(${this.data.path}faces/${this.config.analogFace}.svg)`;
 				analogWrapper.style.backgroundSize = "100%";
 
-				// The following line solves issue: https://github.com/MagicMirrorOrg/MagicMirror/issues/611
+				// The following line solves issue: https://github.com/MorningMirrorOrg/MorningMirror/issues/611
 				// analogWrapper.style.border = "1px solid black";
 				analogWrapper.style.border = "rgba(0, 0, 0, 0.1)"; //Updated fix for Issue 611 where non-black backgrounds are used
 			} else if (this.config.analogFace !== "none") {

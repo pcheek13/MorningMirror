@@ -12,7 +12,7 @@ const Module = Class.extend({
 	 ********************************************************
 	 */
 
-	// Set the minimum MagicMirror² module version for this module.
+	// Set the minimum MorningMirror module version for this module.
 	requiresVersion: "2.0.0",
 
 	// Module config defaults.
@@ -75,7 +75,7 @@ const Module = Class.extend({
 	},
 
 	/**
-	 * Generates the dom which needs to be displayed. This method is called by the MagicMirror² core.
+	 * Generates the dom which needs to be displayed. This method is called by the MorningMirror core.
 	 * This method can to be subclassed if the module wants to display info on the mirror.
 	 * Alternatively, the getTemplate method could be subclassed.
 	 * @returns {HTMLElement|Promise} The dom or a promise with the dom to display.
@@ -109,7 +109,7 @@ const Module = Class.extend({
 
 	/**
 	 * Generates the header string which needs to be displayed if a user has a header configured for this module.
-	 * This method is called by the MagicMirror² core, but only if the user has configured a default header for the module.
+	 * This method is called by the MorningMirror core, but only if the user has configured a default header for the module.
 	 * This method needs to be subclassed if the module wants to display modified headers on the mirror.
 	 * @returns {string} The header to display above the header.
 	 */
@@ -138,7 +138,7 @@ const Module = Class.extend({
 	},
 
 	/**
-	 * Called by the MagicMirror² core when a notification arrives.
+	 * Called by the MorningMirror core when a notification arrives.
 	 * @param {string} notification The identifier of the notification.
 	 * @param {object} payload The payload of the notification.
 	 * @param {Module} sender The module that sent the notification.
@@ -415,7 +415,7 @@ const Module = Class.extend({
 });
 
 /**
- * Merging MagicMirror² (or other) default/config script by @bugsounet
+ * Merging MorningMirror (or other) default/config script by @bugsounet
  * Merge 2 objects or/with array
  *
  * Usage:
@@ -478,7 +478,7 @@ Module.create = function (name) {
 
 Module.register = function (name, moduleDefinition) {
 	if (moduleDefinition.requiresVersion) {
-		Log.log(`Check MagicMirror² version for module '${name}' - Minimum version:  ${moduleDefinition.requiresVersion} - Current version: ${window.mmVersion}`);
+		Log.log(`Check MorningMirror version for module '${name}' - Minimum version:  ${moduleDefinition.requiresVersion} - Current version: ${window.mmVersion}`);
 		if (cmpVersions(window.mmVersion, moduleDefinition.requiresVersion) >= 0) {
 			Log.log("Version is ok!");
 		} else {

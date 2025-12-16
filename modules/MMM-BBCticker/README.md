@@ -1,6 +1,6 @@
 # MMM-BBCticker
 
-A MagicMirror² module that shows the latest BBC World News headlines as a smooth scrolling ticker, perfect for the bottom bar of your smart mirror display.
+A MorningMirror module that shows the latest BBC World News headlines as a smooth scrolling ticker, perfect for the bottom bar of your smart mirror display.
 
 ## Features
 
@@ -12,16 +12,16 @@ A MagicMirror² module that shows the latest BBC World News headlines as a smoot
 
 ## Installation
 
-Run the following commands on your Raspberry Pi (or any device hosting MagicMirror²) to clone and prepare the module in one step:
+Run the following commands on your Raspberry Pi (or any device hosting MorningMirror) to clone and prepare the module in one step:
 
 ```bash
-cd ~/MagicMirror/modules && \
+cd ~/MorningMirror/modules && \
   git clone https://github.com/pcheek13/MMM-BBCticker.git && \
   cd MMM-BBCticker && \
   npm install
 ```
 
-## MagicMirror Configuration
+## MorningMirror Configuration
 
 Add the module to the `modules` array in your `config/config.js` file:
 
@@ -67,7 +67,7 @@ Add the module to the `modules` array in your `config/config.js` file:
 
 ### Running Locally
 
-MagicMirror modules are meant to run inside the MagicMirror application. To test locally, start MagicMirror with:
+MorningMirror modules are meant to run inside the MorningMirror application. To test locally, start MorningMirror with:
 
 ```bash
 npm run start
@@ -79,7 +79,7 @@ or, for server-only mode on a headless Raspberry Pi:
 npm run server
 ```
 
-Then load your MagicMirror interface in a browser or Electron window. This module is optimized for placement in the `bottom_bar` region to achieve the classic ticker effect.
+Then load your MorningMirror interface in a browser or Electron window. This module is optimized for placement in the `bottom_bar` region to achieve the classic ticker effect.
 
 ## Troubleshooting
 

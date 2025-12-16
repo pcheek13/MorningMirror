@@ -22,7 +22,7 @@ const fetch_timeout = process.env.mmFetchTimeout !== undefined ? process.env.mmF
 // Get version number.
 global.version = require(`${global.root_path}/package.json`).version;
 global.mmTestMode = process.env.mmTestMode === "true";
-Log.log(`Starting MagicMirror: v${global.version}`);
+Log.log(`Starting MorningMirror: v${global.version}`);
 
 // Log system information.
 Utils.logSystemInformation(global.version);
@@ -32,7 +32,7 @@ if (process.env.MM_CONFIG_FILE) {
 }
 
 // FIXME: Hotfix Pull Request
-// https://github.com/MagicMirrorOrg/MagicMirror/pull/673
+// https://github.com/MorningMirrorOrg/MorningMirror/pull/673
 if (process.env.MM_PORT) {
 	global.mmPort = process.env.MM_PORT;
 }
@@ -44,8 +44,8 @@ process.on("uncaughtException", function (err) {
 	if (!err.stack.includes("node_modules/systeminformation")) {
 		Log.error("Whoops! There was an uncaught exception...");
 		Log.error(err);
-		Log.error("MagicMirror² will not quit, but it might be a good idea to check why this happened. Maybe no internet connection?");
-		Log.error("If you think this really is an issue, please open an issue on GitHub: https://github.com/MagicMirrorOrg/MagicMirror/issues");
+		Log.error("MorningMirror will not quit, but it might be a good idea to check why this happened. Maybe no internet connection?");
+		Log.error("If you think this really is an issue, please open an issue on GitHub: https://github.com/MorningMirrorOrg/MorningMirror/issues");
 	}
 });
 
@@ -225,7 +225,7 @@ function App () {
 			let m = new Module();
 
 			if (m.requiresVersion) {
-				Log.log(`Check MagicMirror² version for node helper '${moduleName}' - Minimum version: ${m.requiresVersion} - Current version: ${global.version}`);
+				Log.log(`Check MorningMirror version for node helper '${moduleName}' - Minimum version: ${m.requiresVersion} - Current version: ${global.version}`);
 				if (cmpVersions(global.version, m.requiresVersion) >= 0) {
 					Log.log("Version is ok!");
 				} else {

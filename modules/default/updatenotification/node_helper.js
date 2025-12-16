@@ -39,8 +39,8 @@ module.exports = NodeHelper.create({
 			}
 		}
 
-		if (!this.ignoreUpdateChecking("MagicMirror")) {
-			await this.gitHelper.add("MagicMirror");
+		if (!this.ignoreUpdateChecking("MorningMirror")) {
+			await this.gitHelper.add("MorningMirror");
 		}
 	},
 

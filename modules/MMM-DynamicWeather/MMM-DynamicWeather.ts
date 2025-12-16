@@ -4,7 +4,7 @@
  * By Scott Lewis - https://github.com/scottcl88/MMM-DynamicWeather
  * MIT Licensed.
  *
- * A heavily configurable MagicMirror Module to display different animations based on current weather and show customized event effects.
+ * A heavily configurable MorningMirror Module to display different animations based on current weather and show customized event effects.
  */
 declare const Log: Console;
 declare const Module: any;
