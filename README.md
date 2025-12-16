@@ -3,11 +3,11 @@
 MorningMirror is a streamlined, modular smart mirror platform ready to clone and run on a Raspberry Pi 5. The project keeps the familiar Magic Mirror experience while simplifying setup, trimming legacy references, and bundling the essentials you need to get a display running quickly.
 
 ## Quick install (Raspberry Pi 5)
-Copy and paste this single block on a clean Raspberry Pi 5 to clone MorningMirror, install dependencies, copy the sample config,
-and start it with PM2 for boot persistence:
+Copy and paste this single block on a clean Raspberry Pi 5 to install Node 20 directly from NodeSource (avoids the `nodejs`/`npm` conflict seen with Debian packages), clone MorningMirror, install dependencies, copy the sample config, and start it with PM2 for boot persistence:
 
 ```bash
-sudo apt update && sudo apt install -y git nodejs npm && \
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
+  sudo apt update && sudo apt install -y git nodejs && \
   git clone https://github.com/pcheek13/MorningMirror.git && \
   cd MorningMirror && \
   npm install && \
@@ -17,6 +17,8 @@ sudo apt update && sudo apt install -y git nodejs npm && \
   pm2 save && \
   pm2 startup
 ```
+
+> **Why the previous one-liner failed:** Raspberry Pi OS (Bookworm) ships an `npm` package that conflicts with the NodeSource `nodejs` package (`nodejs` already bundles npm). Installing both in a single apt command triggers "unmet dependencies". The updated command installs only `nodejs` from NodeSource—which includes npm—eliminating the conflict.
 
 ## Key features
 - Modular layout with server and client components ready for custom modules, mirroring the familiar Magic Mirror scaffolding.
