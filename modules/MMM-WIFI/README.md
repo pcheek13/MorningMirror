@@ -51,7 +51,7 @@ nano ~/MorningMirror/config/config.js # change nano to your favorite editor
 | `touchTargetSize`  | `96`                                     | Minimum square size (px) of the tap target around the Wi‑Fi icon for easier touchscreen interaction. |
 | `allowWifiUpdates` | `true`                                   | When enabled, tapping the Wi‑Fi icon on a touchscreen toggles a form to enter a new SSID and password. |
 | `showVirtualKeyboard` | `true`                                | Displays a built-in on-screen keyboard beneath the form so you can type SSID and password without a hardware keyboard. |
-| `wifiCommand`      | `/bin/bash /home/pcheek/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh {ssid} {password}` | Command executed to update Wi‑Fi (defaults to the provided shell script). Customize if your Pi uses a different path or interface name. |
+| `wifiCommand`      | `/bin/bash {modulePath}/scripts/update-wifi.sh {ssid} {password}` | Command executed to update Wi‑Fi (defaults to the provided shell script in this module’s folder). Customize if your Pi uses a different path or interface name. |
 | `useSudoForWifiCommand` | `true`                              | Run the Wi‑Fi command with `sudo`. Disable only if your MorningMirror user already has permission to manage networking. |
 
 ### Updating Wi‑Fi from the mirror
@@ -134,19 +134,15 @@ echo "Wi-Fi credentials for '$SSID' applied. Backup saved to $BACKUP_PATH"
 EOF
 ```
 
-2. Make it executable so MorningMirror can run it:
+2. Make it executable so MorningMirror can run it, and (optionally) test it immediately. You can copy/paste this block from the repository root on your Pi (replace `YourSSID`/`YourPassword` with real credentials or drop the last line if you only want to set permissions):
 
 ```bash
-chmod +x scripts/update-wifi.sh
+cd ~/MorningMirror/modules/MMM-WIFI && \
+  chmod +x scripts/update-wifi.sh && \
+  sudo /bin/bash ./scripts/update-wifi.sh "YourSSID" "YourPassword"
 ```
 
-3. (Optional) Test the helper directly from the command line to confirm it updates your Pi’s Wi‑Fi before relying on the touchscreen form:
-
-```bash
-sudo /bin/bash /home/pcheek/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh "YourSSID" "YourPassword"
-```
-
-4. Ensure `wifiCommand` in your `config.js` points to this script. The default already assumes `/home/pcheek/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh` and runs it with `sudo` when `useSudoForWifiCommand` is `true`.
+3. Ensure `wifiCommand` in your `config.js` points to this script. The default now uses `{modulePath}` so the module automatically resolves its own folder (for example, `/home/pi/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh`) and runs it with `sudo` when `useSudoForWifiCommand` is `true`.
 
 > **Troubleshooting `cp: cannot stat '/etc/wpa_supplicant/wpa_supplicant.conf'`**
 >

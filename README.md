@@ -66,6 +66,8 @@ MorningMirror ships with a curated set of node modules to mirror the original ex
 
 The default configuration ships with the MMM-Modulebar docked in the bottom-right corner so you can toggle core modules on or off without editing the config file. MMM-WIFI is pinned to the bottom-left for quick network checks, MMM-DailyWeatherPrompt sits in the top-right, and MMM-DynamicWeather renders full-screen weather effects. Set your OpenWeatherMap API key in `MMM-DynamicWeather` and optionally prefill `location` for `MMM-DailyWeatherPrompt` if you do not want the on-screen prompt.
 
+MMM-WIFI now resolves its helper script using `{modulePath}` and ships with the executable bit set, so the Wi‑Fi update button can call `scripts/update-wifi.sh` without hitting "no such file" errors on fresh Raspberry Pi installs.
+
 ## Troubleshooting common install errors
 - **`node: bad option: --run` when running `npm start`**: Older Node releases on Raspberry Pi OS do not ship with the experimental `--run` flag. The start scripts now call Electron directly; pull the latest changes and rerun `npm ci --omit=dev`.
 - **`Electron failed to install correctly, please delete node_modules/electron and try installing again`**: This happens when `ELECTRON_SKIP_BINARY_DOWNLOAD=1` is set or the download was interrupted. Fix it by removing Electron and reinstalling dependencies so the binary downloads:
