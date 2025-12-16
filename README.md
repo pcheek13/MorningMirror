@@ -3,22 +3,24 @@
 MorningMirror is a streamlined, modular smart mirror platform ready to clone and run on a Raspberry Pi 5. The project keeps the familiar Magic Mirror experience while simplifying setup, trimming legacy references, and bundling the essentials you need to get a display running quickly.
 
 ## Quick install (Raspberry Pi 5)
-Copy and paste this single block on a clean Raspberry Pi 5 to install Node 20 directly from NodeSource (avoids the `nodejs`/`npm` conflict seen with Debian packages), clone MorningMirror, install dependencies, copy the sample config, and start it with PM2 for boot persistence:
+Copy and paste this single block on a clean Raspberry Pi 5 to install Node 20 from NodeSource, clone MorningMirror, install production dependencies (including Electron), copy the sample config, and start it with PM2 for boot persistence:
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
   sudo apt update && sudo apt install -y git nodejs && \
   git clone https://github.com/pcheek13/MorningMirror.git && \
   cd MorningMirror && \
-  ELECTRON_SKIP_BINARY_DOWNLOAD=1 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install && \
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev && \
   cp config/config.js.sample config/config.js && \
   sudo npm install -g pm2 && \
-  pm2 start js/electron.js --name morningmirror && \
+  pm2 start npm --name morningmirror -- start && \
   pm2 save && \
   pm2 startup
 ```
 
-> **Why the previous one-liner failed:** Raspberry Pi OS (Bookworm) ships an `npm` package that conflicts with the NodeSource `nodejs` package (`nodejs` already bundles npm). Installing both in a single apt command triggers "unmet dependencies". The updated command installs only `nodejs` from NodeSource—which includes npm—eliminating the conflict.
+The `npm ci --omit=dev` step installs only the runtime dependencies (Electron included) to keep downloads lean on the Pi. Removing `ELECTRON_SKIP_BINARY_DOWNLOAD` ensures Electron actually downloads its platform binary so the app can start.
+
+If PM2 prints a `pm2 startup ...` command, run it exactly as shown to register the service with systemd. After a reboot, the `morningmirror` process will start automatically.
 
 ## Key features
 - Modular layout with server and client components ready for custom modules, mirroring the familiar Magic Mirror scaffolding.
@@ -44,6 +46,15 @@ MorningMirror ships with a curated set of node modules to mirror the original ex
    ```
 2. Update modules, API keys, or layout regions within `config/config.js` to suit your display.
 3. Restart MorningMirror to apply changes (`npm run start:x11` or restart the PM2 process).
+
+## Troubleshooting common install errors
+- **`node: bad option: --run` when running `npm start`**: Older Node releases on Raspberry Pi OS do not ship with the experimental `--run` flag. The start scripts now call Electron directly; pull the latest changes and rerun `npm ci --omit=dev`.
+- **`Electron failed to install correctly, please delete node_modules/electron and try installing again`**: This happens when `ELECTRON_SKIP_BINARY_DOWNLOAD=1` is set or the download was interrupted. Fix it by removing Electron and reinstalling dependencies so the binary downloads:
+  ```bash
+  rm -rf node_modules/electron ~/.cache/electron && \
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev
+  ```
+- **PM2 stuck in `stopped` state**: Ensure PM2 is using the npm script (`pm2 start npm --name morningmirror -- start`) and that your display server is available (`DISPLAY=:0` for X11 or `WAYLAND_DISPLAY=wayland-1` for Wayland).
 
 ## Contributing
 Issues and pull requests are welcome at [github.com/pcheek13/MorningMirror](https://github.com/pcheek13/MorningMirror). Keep changes small, add tests where possible, and follow the included linting tools before committing.
