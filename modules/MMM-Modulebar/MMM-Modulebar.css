@@ -10,6 +10,8 @@
 .modulebar-menu {
     display: flex;
     align-items: stretch;
+    position: relative;
+    z-index: 20;
 }
 
 .modulebar-button {

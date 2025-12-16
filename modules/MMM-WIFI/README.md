@@ -1,6 +1,6 @@
 # MMM-WIFI
 
-Display a solid Wi‑Fi logo as network signal for MorningMirror (and MorningMirror forks) and tap it to reconfigure your Wi‑Fi directly from the mirror.
+Display a solid Wi‑Fi logo as network signal for MorningMirror (and MorningMirror forks) and tap it to reconfigure your Wi‑Fi directly from the mirror. The default refresh cadence is tuned to 30 seconds with no fade animation to keep the icon steady instead of blinking.
 
 ![Signal icons: none, weak, normal, strong, loading](https://raw.githubusercontent.com/pcheek13/MMM-WIFI/master/icons.gif)
 
@@ -39,10 +39,10 @@ nano ~/MorningMirror/config/config.js # change nano to your favorite editor
 
 | **Option**         | **Default**                              | **Description**                         |
 | ------------------ | ---------------------------------------- | --------------------------------------- |
-| `updateInterval`   | `5000`                                   | Time in ms between connection tests     |
+| `updateInterval`   | `30000`                                  | Time in ms between connection tests     |
 | `maxTimeout`       | `1000`                                   | Maximum timeout in ms for every pings   |
-| `animationSpeed`   | `250`                                    | Icon change animation time in ms        |
-| `initialLoadDelay` | `3000`                                   | Delay in ms for first ping              |
+| `animationSpeed`   | `0`                                      | Icon change animation time in ms        |
+| `initialLoadDelay` | `5000`                                   | Delay in ms for first ping              |
 | `server`           | `8.8.8.8`                                | Pingable server IP address              |
 | `thresholds`       | `{ strong: 50, medium: 150, weak: 500 }` | Tresholds for icons (ping answer in ms) |
 | `showMessage`      | `true`                                   | Shows status messages depending on how good or bad is the connection |
@@ -51,7 +51,7 @@ nano ~/MorningMirror/config/config.js # change nano to your favorite editor
 | `touchTargetSize`  | `96`                                     | Minimum square size (px) of the tap target around the Wi‑Fi icon for easier touchscreen interaction. |
 | `allowWifiUpdates` | `true`                                   | When enabled, tapping the Wi‑Fi icon on a touchscreen toggles a form to enter a new SSID and password. |
 | `showVirtualKeyboard` | `true`                                | Displays a built-in on-screen keyboard beneath the form so you can type SSID and password without a hardware keyboard. |
-| `wifiCommand`      | `/bin/bash /home/pi/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh {ssid} {password}` | Command executed to update Wi‑Fi (defaults to the provided shell script). Customize if your Pi uses a different path or interface name. |
+| `wifiCommand`      | `/bin/bash /home/pcheek/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh {ssid} {password}` | Command executed to update Wi‑Fi (defaults to the provided shell script). Customize if your Pi uses a different path or interface name. |
 | `useSudoForWifiCommand` | `true`                              | Run the Wi‑Fi command with `sudo`. Disable only if your MorningMirror user already has permission to manage networking. |
 
 ### Updating Wi‑Fi from the mirror
@@ -143,10 +143,10 @@ chmod +x scripts/update-wifi.sh
 3. (Optional) Test the helper directly from the command line to confirm it updates your Pi’s Wi‑Fi before relying on the touchscreen form:
 
 ```bash
-sudo /bin/bash /home/pi/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh "YourSSID" "YourPassword"
+sudo /bin/bash /home/pcheek/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh "YourSSID" "YourPassword"
 ```
 
-4. Ensure `wifiCommand` in your `config.js` points to this script. The default already assumes `/home/pi/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh` and runs it with `sudo` when `useSudoForWifiCommand` is `true`.
+4. Ensure `wifiCommand` in your `config.js` points to this script. The default already assumes `/home/pcheek/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh` and runs it with `sudo` when `useSudoForWifiCommand` is `true`.
 
 > **Troubleshooting `cp: cannot stat '/etc/wpa_supplicant/wpa_supplicant.conf'`**
 >

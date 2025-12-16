@@ -138,10 +138,10 @@ let config = {
                         module: "MMM-WIFI",
                         position: "bottom_left",
                         config: {
-                                updateInterval: 1000 * 5,
+                                updateInterval: 1000 * 30,
                                 maxTimeout: 1000,
-                                animationSpeed: 1000 * 0.25,
-                                initialLoadDelay: 1000 * 3,
+                                animationSpeed: 0,
+                                initialLoadDelay: 1000 * 5,
                                 server: "8.8.8.8",
                                 showMessage: true,
                                 thresholds: {
@@ -156,7 +156,7 @@ let config = {
                                 showVirtualKeyboard: true,
                                 wifiCommand: {
                                         executable: "/bin/bash",
-                                        args: ["/home/pi/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh", "{ssid}", "{password}"],
+                                        args: ["/home/pcheek/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh", "{ssid}", "{password}"],
                                         timeout: 20000,
                                 },
                                 useSudoForWifiCommand: true,
