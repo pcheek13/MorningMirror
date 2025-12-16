@@ -42,7 +42,7 @@ If `pm2 startup` prints a command, run it verbatim so systemd registers the serv
 ## Key features
 - Modular layout with server and client components ready for custom modules, mirroring the familiar Magic Mirror scaffolding.
 - Electron-powered shell for kiosk-style full-screen operation.
-- Default modules (clock, calendar, weather, news) preconfigured to work out of the box.
+- Default modules preconfigured to work out of the box: MMM-DynamicWeather, MMM-DailyWeatherPrompt, MMM-WIFI, clock, alert, update notification, and Modulebar controls.
 - Development tooling (ESLint, Prettier, Jest, Stylelint) included for rapid module creation.
 
 ## Core dependencies
@@ -64,7 +64,7 @@ MorningMirror ships with a curated set of node modules to mirror the original ex
 2. Update modules, API keys, or layout regions within `config/config.js` to suit your display.
 3. Restart MorningMirror to apply changes (`npm run start:x11` or restart the PM2 process).
 
-The default configuration ships with the MMM-Modulebar docked in the bottom-right corner so you can toggle core modules on or off without editing the config file.
+The default configuration ships with the MMM-Modulebar docked in the bottom-right corner so you can toggle core modules on or off without editing the config file. MMM-WIFI is pinned to the bottom-left for quick network checks, MMM-DailyWeatherPrompt sits in the top-right, and MMM-DynamicWeather renders full-screen weather effects. Set your OpenWeatherMap API key in `MMM-DynamicWeather` and optionally prefill `location` for `MMM-DailyWeatherPrompt` if you do not want the on-screen prompt.
 
 ## Troubleshooting common install errors
 - **`node: bad option: --run` when running `npm start`**: Older Node releases on Raspberry Pi OS do not ship with the experimental `--run` flag. The start scripts now call Electron directly; pull the latest changes and rerun `npm ci --omit=dev`.
