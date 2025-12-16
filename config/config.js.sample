@@ -4,6 +4,8 @@
  * Copy this file to config.js and adjust modules and options.
  * You can also use config.js.template with environment variables if preferred.
  */
+const timeFormat = 24;
+
 let config = {
         address: "localhost",   // Address to listen on, can be:
                                                         // - "localhost", "127.0.0.1", "::1" to listen on loopback interface
@@ -30,7 +32,7 @@ let config = {
                            // see https://en.wikipedia.org/wiki/Locale_(computer_software) for the possibilities
 
         logLevel: ["INFO", "LOG", "WARN", "ERROR"], // Add "DEBUG" for even more logging
-        timeFormat: 24,
+        timeFormat,
         units: "metric",
 
         modules: [
@@ -63,7 +65,7 @@ let config = {
                         position: "top_left",
                         config: {
                                 displayType: "digital",
-                                timeFormat: config.timeFormat,
+                                timeFormat,
                                 timezone: null,
                                 displaySeconds: true,
                                 showPeriod: true,

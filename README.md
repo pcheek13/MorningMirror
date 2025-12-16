@@ -73,6 +73,12 @@ The default configuration ships with the MMM-Modulebar docked in the bottom-righ
   rm -rf node_modules/electron ~/.cache/electron && \
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev
   ```
+- **`Cannot access 'config' before initialization` when starting Electron**: Update your config to the latest format by copying the sample again. Any customizations can be re-applied afterward:
+  ```bash
+  cd ~/MorningMirror && \
+    cp config/config.js.sample config/config.js && \
+    npm start
+  ```
 - **PM2 stuck in `stopped` state**: Ensure PM2 is using the npm script (`pm2 start npm --name morningmirror -- start`) and that your display server is available (`DISPLAY=:0` for X11 or `WAYLAND_DISPLAY=wayland-1` for Wayland).
 
 ## Contributing
