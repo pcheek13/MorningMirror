@@ -413,5 +413,14 @@ Module.register("MMM-DailyWeatherPrompt", {
 
     wrapper.appendChild(this.renderWeather());
     return wrapper;
+  },
+
+  notificationReceived(notification, payload) {
+    if (notification === "LOCATION_UPDATED" && payload && payload.location) {
+      this.userLocation = payload.location;
+      this.saveLocation(payload.location);
+      this.requestWeather();
+      this.updateDom();
+    }
   }
 });

@@ -2,24 +2,26 @@
 
 Module.register("compliments", {
 	// Module config defaults.
-	defaults: {
-		compliments: {
-			anytime: ["Hey there sexy!"],
-			morning: ["Good morning, handsome!", "Enjoy your day!", "How was your sleep?"],
-			afternoon: ["Hello, beauty!", "You look sexy!", "Looking good today!"],
-			evening: ["Wow, you look hot!", "You look nice!", "Hi, sexy!"],
-			"....-01-01": ["Happy new year!"]
-		},
-		updateInterval: 30000,
+defaults: {
+compliments: {
+anytime: ["Hey there sexy!"],
+morning: ["Good morning, handsome!", "Enjoy your day!", "How was your sleep?"],
+afternoon: ["Hello, beauty!", "You look sexy!", "Looking good today!"],
+evening: ["Wow, you look hot!", "You look nice!", "Hi, sexy!"],
+"....-01-01": ["Happy new year!"]
+},
+updateInterval: 30000,
 		remoteFile: null,
 		remoteFileRefreshInterval: 0,
-		fadeSpeed: 4000,
-		morningStartTime: 3,
-		morningEndTime: 12,
-		afternoonStartTime: 12,
-		afternoonEndTime: 17,
-		random: true,
-		specialDayUnique: false
+fadeSpeed: 4000,
+wakeDisplayDuration: 25000,
+profileName: "",
+morningStartTime: 3,
+morningEndTime: 12,
+afternoonStartTime: 12,
+afternoonEndTime: 17,
+random: true,
+specialDayUnique: false
 	},
 	urlSuffix: "",
 	compliments_new: null,
@@ -36,14 +38,16 @@ Module.register("compliments", {
 	},
 
 	// Define start sequence.
-	async start () {
-		Log.info(`Starting module: ${this.name}`);
+async start () {
+Log.info(`Starting module: ${this.name}`);
 
-		this.lastComplimentIndex = -1;
+this.lastComplimentIndex = -1;
+this.wakeTimer = null;
+this.profileName = this.config.profileName;
 
-		if (this.config.remoteFile !== null) {
-			const response = await this.loadComplimentFile();
-			this.config.compliments = JSON.parse(response);
+if (this.config.remoteFile !== null) {
+const response = await this.loadComplimentFile();
+this.config.compliments = JSON.parse(response);
 			this.updateDom();
 			if (this.config.remoteFileRefreshInterval !== 0) {
 				if ((this.config.remoteFileRefreshInterval >= this.refreshMinimumDelay) || window.mmTestMode === "true") {
@@ -74,12 +78,14 @@ Module.register("compliments", {
 		}
 		// Schedule update timer. sync to the minute start (if needed), so minute based events happen on the minute start
 		setTimeout(() => {
-			setInterval(() => {
-				this.updateDom(this.config.fadeSpeed);
-			}, this.config.updateInterval);
-		},
-		minute_sync_delay);
-	},
+setInterval(() => {
+this.updateDom(this.config.fadeSpeed);
+}, this.config.updateInterval);
+},
+minute_sync_delay);
+
+this.triggerWakeGreeting();
+},
 
 	// check to see if this entry could be a cron entry wich contains spaces
 	isCronEntry (entry) {
@@ -228,11 +234,11 @@ Module.register("compliments", {
 	 * Retrieve a random compliment.
 	 * @returns {string} a compliment
 	 */
-	getRandomCompliment () {
-		// get the current time of day compliments list
-		const compliments = this.complimentArray();
-		// variable for index to next message to display
-		let index;
+getRandomCompliment () {
+// get the current time of day compliments list
+const compliments = this.complimentArray();
+// variable for index to next message to display
+let index;
 		// are we randomizing
 		if (this.config.random) {
 			// yes
@@ -243,19 +249,43 @@ Module.register("compliments", {
 			index = this.lastIndexUsed >= compliments.length - 1 ? 0 : ++this.lastIndexUsed;
 		}
 
-		return compliments[index] || "";
-	},
+return compliments[index] || "";
+},
+
+formatCompliment (text) {
+if (!text) {
+return "";
+}
+if (this.profileName) {
+if (text.includes("{name}")) {
+return text.replace(/\{name\}/gi, this.profileName);
+}
+return `${this.profileName}, ${text}`;
+}
+return text;
+},
+
+triggerWakeGreeting () {
+if (this.wakeTimer) {
+clearTimeout(this.wakeTimer);
+}
+this.show(this.config.fadeSpeed);
+this.updateDom(this.config.fadeSpeed);
+this.wakeTimer = setTimeout(() => {
+this.hide(this.config.fadeSpeed);
+}, this.config.wakeDisplayDuration);
+},
 
 	// Override dom generator.
-	getDom () {
-		const wrapper = document.createElement("div");
-		wrapper.className = this.config.classes ? this.config.classes : "thin xlarge bright pre-line";
-		// get the compliment text
-		const complimentText = this.getRandomCompliment();
-		// split it into parts on newline text
-		const parts = complimentText.split("\n");
-		// create a span to hold the compliment
-		const compliment = document.createElement("span");
+getDom () {
+const wrapper = document.createElement("div");
+wrapper.className = this.config.classes ? this.config.classes : "thin xlarge bright pre-line";
+// get the compliment text
+const complimentText = this.formatCompliment(this.getRandomCompliment());
+// split it into parts on newline text
+const parts = complimentText.split("\n");
+// create a span to hold the compliment
+const compliment = document.createElement("span");
 		// process all the parts of the compliment text
 		for (const part of parts) {
 			if (part !== "") {
@@ -295,10 +325,21 @@ Module.register("compliments", {
 		return wrapper;
 	},
 
-	// Override notification handler.
-	notificationReceived (notification, payload, sender) {
-		if (notification === "CURRENTWEATHER_TYPE") {
-			this.currentWeatherType = payload.type;
-		}
-	}
+// Override notification handler.
+notificationReceived (notification, payload, sender) {
+if (notification === "CURRENTWEATHER_TYPE") {
+this.currentWeatherType = payload.type;
+return;
+}
+
+if (notification === "PROFILE_UPDATED" && payload && payload.profileName !== undefined) {
+this.profileName = payload.profileName || "";
+this.updateDom(this.config.fadeSpeed);
+return;
+}
+
+if (notification === "MIRROR_WAKE") {
+this.triggerWakeGreeting();
+}
+}
 });

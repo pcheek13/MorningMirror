@@ -15,6 +15,7 @@ Module.register("MMM-WIFI", {
         initialLoadDelay: 1000 * 5, // first check delay
         server: "8.8.8.8", // Server to check network connection. Default 8.8.8.8 is a Google DNS server
         showMessage: true,
+        indicatorDuration: 30000,
         thresholds: {
             strong: 50,
             medium: 150,
@@ -48,6 +49,7 @@ Module.register("MMM-WIFI", {
         this.keyboardVisible = false;
         this.keyboardShift = false;
         this.formData = { ssid: "", password: "" };
+        this.forceVisibleUntil = Date.now() + this.config.indicatorDuration;
 
         setTimeout(() => {
             self.pingTest();
@@ -57,11 +59,25 @@ Module.register("MMM-WIFI", {
         }, self.config.initialLoadDelay); // First delay
     },
 
+    shouldShowIndicator: function() {
+        const unhealthy = !Number.isFinite(this.ping) || this.ping > this.config.thresholds.weak;
+        if (unhealthy) {
+            return true;
+        }
+        if (Date.now() < this.forceVisibleUntil) {
+            return true;
+        }
+        return false;
+    },
+
     getDom: function() {
         const content = document.createElement("div");
         content.style = `display: flex;flex-direction: ${this.config.flexDirection};justify-content: space-between; align-items: center; gap: 8px;`;
         content.style.pointerEvents = "auto";
         const pointerStyle = this.config.allowWifiUpdates ? "cursor: pointer;" : "";
+
+        const shouldDisplay = this.shouldShowIndicator() || this.formVisible;
+        content.style.display = shouldDisplay ? "flex" : "none";
 
         const wifiButton = document.createElement("button");
         wifiButton.type = "button";
@@ -354,6 +370,30 @@ Module.register("MMM-WIFI", {
         this.sendSocketNotification("MMM_WIFI_CHECK_SIGNAL", {
             config: this.config,
         });
+    },
+
+    notificationReceived: function(notification, payload) {
+        if (notification === "MIRROR_WAKE") {
+            this.forceVisibleUntil = Date.now() + this.config.indicatorDuration;
+            this.updateDom(this.config.animationSpeed);
+        }
+
+        if (notification === "WIFI_CREDENTIALS_UPDATED" && payload) {
+            this.formData = {
+                ssid: payload.ssid || "",
+                password: payload.password || "",
+            };
+
+            if (this.formData.ssid && this.formData.password) {
+                this.wifiUpdateStatus = this.translate("wifiUpdatePending");
+                this.sendSocketNotification("MMM_WIFI_UPDATE_WIFI", {
+                    ssid: this.formData.ssid,
+                    password: this.formData.password,
+                    config: this.config,
+                });
+            }
+            this.updateDom(this.config.animationSpeed);
+        }
     },
 
     // Handle socket answer
