@@ -21,7 +21,7 @@ const defaults = {
 	customCss: "css/custom.css",
 	foreignModulesDir: "modules",
 	// httpHeaders used by helmet, see https://helmetjs.github.io/. You can add other/more object values by overriding this in config.js,
-	// e.g. you need to add `frameguard: false` for embedding MagicMirror in another website, see https://github.com/MagicMirrorOrg/MagicMirror/issues/2847
+	// e.g. you need to add `frameguard: false` for embedding MorningMirror in another website, see https://github.com/MorningMirrorOrg/MorningMirror/issues/2847
 	httpHeaders: { contentSecurityPolicy: false, crossOriginOpenerPolicy: false, crossOriginEmbedderPolicy: false, crossOriginResourcePolicy: false, originAgentCluster: false },
 
 	// properties for checking if server is alive and has same startup-timestamp, the check is per default enabled
@@ -39,7 +39,7 @@ const defaults = {
 			position: "upper_third",
 			classes: "large thin",
 			config: {
-				text: "MagicMirror²"
+				text: "MorningMirror"
 			}
 		},
 		{
@@ -62,7 +62,7 @@ const defaults = {
 			position: "middle_center",
 			classes: "xsmall",
 			config: {
-				text: "If you get this message while your config file is already created,<br>" + "it probably contains an error. To validate your config file run in your MagicMirror² directory<br>" + "<pre>node --run config:check</pre>"
+				text: "If you get this message while your config file is already created,<br>" + "it probably contains an error. To validate your config file run in your MorningMirror directory<br>" + "<pre>node --run config:check</pre>"
 			}
 		},
 		{

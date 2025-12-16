@@ -121,7 +121,7 @@ function getHtml (req, res) {
 }
 
 /**
- * Gets the MagicMirror version.
+ * Gets the MorningMirror version.
  * @param {Request} req - the request
  * @param {Response} res - the result
  */
@@ -134,7 +134,7 @@ function getVersion (req, res) {
  * @returns {string} `User-Agent` to be used
  */
 function getUserAgent () {
-	const defaultUserAgent = `Mozilla/5.0 (Node.js ${Number(process.version.match(/^v(\d+\.\d+)/)[1])}) MagicMirror/${global.version}`;
+	const defaultUserAgent = `Mozilla/5.0 (Node.js ${Number(process.version.match(/^v(\d+\.\d+)/)[1])}) MorningMirror/${global.version}`;
 
 	if (typeof config === "undefined") {
 		return defaultUserAgent;

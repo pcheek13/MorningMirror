@@ -1,6 +1,6 @@
 # MMM-Modulebar
 
-This an extension for the [MagicMirror²](https://magicmirror.builders/).
+This an extension for the [MorningMirror](https://magicmirror.builders/).
 
 This Module adds a touch menu to hide / show the defined (in config.js) modules.
 
@@ -28,9 +28,9 @@ This is my own mirrors view (Bottom Bar) using some addition in the custom.css [
 
 ### Installation
 
-In your terminal, go to your MagicMirror's Module folder:
+In your terminal, go to your MorningMirror's Module folder:
 ````
-cd ~/MagicMirror/modules
+cd ~/MorningMirror/modules
 ````
 
 Clone this repository:
@@ -141,8 +141,8 @@ An example:
       module: "MMM-MotionEye",
       idnum: 7,
       text: "CAM1",
-      showUrl: "http://MagicMirrorIP:8080/motioneye/1",
-      hideUrl: "http://MagicMirrorIP:8080/motioneye/hide/1"
+      showUrl: "http://MorningMirrorIP:8080/motioneye/1",
+      hideUrl: "http://MorningMirrorIP:8080/motioneye/hide/1"
     },
   }
 ````
@@ -177,7 +177,7 @@ Here is my CSS settings for the module that I have added to my custom.css to giv
 
 ### Notes
 * **Important:** unfortunately positioning this module as full screen will result in the menu floating top left. I currently do not know how to fix this but will look into it. If you know how don't hesitate to either write me or send me a pull request!
-* If the image is an local path and it does not show. Try different ways to write the local path. If this still does not work then try putting the image in a folder in your MagicMirror folder and use as local path `folder name/image name`.
+* If the image is an local path and it does not show. Try different ways to write the local path. If this still does not work then try putting the image in a folder in your MorningMirror folder and use as local path `folder name/image name`.
 * If only height or width is set for an image the other size will scale to maintain it the image it's original aspect ratio.
 * Module name is case sensitive.
 * If both the `text` and `symbol` aren't set for a button then the button won't contain anything, but still show the border.

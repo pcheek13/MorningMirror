@@ -3,11 +3,11 @@
 <p align="center">
   <a href="https://github.com/scottcl88/MMM-DynamicWeather"><img src="https://img.shields.io/maintenance/yes/2024?style=flat-square" alt="Maintained"/></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
-  <a href="https://github.com/MagicMirrorOrg/MagicMirror"><img src="https://img.shields.io/badge/module%20of-Magic%20Mirror-%234f46e5?style=flat-square" alt="Part of Magic Mirror"/></a>
+  <a href="https://github.com/MorningMirrorOrg/MorningMirror"><img src="https://img.shields.io/badge/module%20of-Magic%20Mirror-%234f46e5?style=flat-square" alt="Part of Magic Mirror"/></a>
   <a href="https://www.npmjs.com/package/mmm-dynamicweather"><img src="https://img.shields.io/npm/v/mmm-dynamicweather" alt="npm package mmm-dynamicweather"/></a>
 </p>
 
-A heavily configurable MagicMirror Module to display different animations based on current weather and show customized event effects.
+A heavily configurable MorningMirror Module to display different animations based on current weather and show customized event effects.
 
 ## Features
 - Display clouds, rain, sun, fog, lightening, and more based on real-time weather in your city
@@ -18,10 +18,10 @@ See [Sample Screenshots](ExampleScreenshots.md)
 
 ## Installation
 
-In your terminal, go to your MagicMirror's Module folder:
+In your terminal, go to your MorningMirror's Module folder:
 
 ````
-cd ~/MagicMirror/modules
+cd ~/MorningMirror/modules
 ````
 
 Clone this repository:
@@ -74,7 +74,7 @@ OR with `lat` and `lon`
 Go to the DynamicWeather module
 
 ````
-cd ~/MagicMirror/modules/MMM-DynamicWeather
+cd ~/MorningMirror/modules/MMM-DynamicWeather
 ````
 
 Pull latest

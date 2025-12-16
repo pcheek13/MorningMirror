@@ -1,10 +1,10 @@
 {
   "name": "mmm-bbcticker",
   "version": "1.0.0",
-  "description": "MagicMirror² module that displays the latest BBC World News headlines in a scrolling ticker.",
+  "description": "MorningMirror module that displays the latest BBC World News headlines in a scrolling ticker.",
   "main": "MMM-BBCticker.js",
   "keywords": [
-    "MagicMirror",
+    "MorningMirror",
     "module",
     "bbc",
     "news",

@@ -1,6 +1,6 @@
 # MMM-DailyWeatherPrompt
 
-MagicMirror² module that displays **today’s weather** and allows you to **set or change the weather location directly on the mirror**. If no location is configured, the module renders a simple on-screen prompt (city/state or ZIP). The chosen location is saved locally and reused on reboot.
+MorningMirror module that displays **today’s weather** and allows you to **set or change the weather location directly on the mirror**. If no location is configured, the module renders a simple on-screen prompt (city/state or ZIP). The chosen location is saved locally and reused on reboot.
 
 ## Features
 
@@ -15,10 +15,10 @@ MagicMirror² module that displays **today’s weather** and allows you to **set
 
 ## One-line install (copy/paste)
 
-Run this on your Raspberry Pi (or any MagicMirror host):
+Run this on your Raspberry Pi (or any MorningMirror host):
 
 ```bash
-cd ~/MagicMirror/modules \
+cd ~/MorningMirror/modules \
   && git clone https://github.com/pcheek13/MMM-DailyWeatherPrompt.git \
   && cd MMM-DailyWeatherPrompt \
   && npm install
@@ -31,7 +31,7 @@ Add the module to your `config.js`:
 ```js
 {
   module: "MMM-DailyWeatherPrompt",
-  position: "top_left", // choose any MagicMirror position
+  position: "top_left", // choose any MorningMirror position
   config: {
     units: "imperial", // or "metric"
     updateInterval: 10 * 60 * 1000, // 10 minutes

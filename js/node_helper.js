@@ -16,7 +16,7 @@ const NodeHelper = Class.extend({
 	},
 
 	/**
-	 * Called when the MagicMirror² server receives a `SIGINT`
+	 * Called when the MorningMirror server receives a `SIGINT`
 	 * Close any open connections, stop any sub-processes and
 	 * gracefully exit the module.
 	 */

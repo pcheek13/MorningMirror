@@ -1,53 +1,50 @@
-# ![MagicMirror²: The open source modular smart mirror platform.](.github/header.png)
+# MorningMirror
 
-<p style="text-align: center">
-  <a href="https://choosealicense.com/licenses/mit">
-  <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
- </a>
- <img src="https://img.shields.io/github/actions/workflow/status/magicmirrororg/magicmirror/automated-tests.yaml" alt="GitHub Actions">
- <img src="https://img.shields.io/github/check-runs/magicmirrororg/magicmirror/master" alt="Build Status">
- <a href="https://github.com/MagicMirrorOrg/MagicMirror">
-  <img src="https://img.shields.io/github/stars/magicmirrororg/magicmirror?style=social" alt="GitHub Stars">
- </a>
-</p>
+MorningMirror is a streamlined, modular smart mirror platform ready to clone and run on a Raspberry Pi 5. The project keeps the familiar Magic Mirror experience while simplifying setup, trimming legacy references, and bundling the essentials you need to get a display running quickly.
 
-**MagicMirror²** is an open source modular smart mirror platform. With a growing list of installable modules, the **MagicMirror²** allows you to convert your hallway or bathroom mirror into your personal assistant. **MagicMirror²** is built by the creator of [the original MagicMirror](https://michaelteeuw.nl/tagged/magicmirror) with the incredible help of a [growing community of contributors](https://github.com/MagicMirrorOrg/MagicMirror/graphs/contributors).
+## Quick install (Raspberry Pi 5)
+Copy and paste this single block on a clean Raspberry Pi 5 to clone MorningMirror, install dependencies, copy the sample config,
+and start it with PM2 for boot persistence:
 
-MagicMirror² focuses on a modular plugin system and uses [Electron](https://www.electronjs.org/) as an application wrapper. So no more web server or browser installs necessary!
+```bash
+sudo apt update && sudo apt install -y git nodejs npm && \
+  git clone https://github.com/pcheek13/MorningMirror.git && \
+  cd MorningMirror && \
+  npm install && \
+  cp config/config.js.sample config/config.js && \
+  npm install -g pm2 && \
+  pm2 start js/electron.js --name morningmirror && \
+  pm2 save && \
+  pm2 startup
+```
 
-## Documentation
+## Key features
+- Modular layout with server and client components ready for custom modules, mirroring the familiar Magic Mirror scaffolding.
+- Electron-powered shell for kiosk-style full-screen operation.
+- Default modules (clock, calendar, weather, news) preconfigured to work out of the box.
+- Development tooling (ESLint, Prettier, Jest, Stylelint) included for rapid module creation.
 
-For the full documentation including **[installation instructions](https://docs.magicmirror.builders/getting-started/installation.html)**, please visit our dedicated documentation website: [https://docs.magicmirror.builders](https://docs.magicmirror.builders).
+## Core dependencies
+MorningMirror ships with a curated set of node modules to mirror the original experience and add modern conveniences:
 
-## Links
+- Runtime: Electron, Express, Socket.io, PM2
+- UI/templating: Nunjucks, Handlebars
+- Utilities: Moment & Moment-Timezone, Day.js, Suncalc, Croner, Envsub
+- Diagnostics and logging: Console-stamp, Roarr, Shimmer
+- Routing and middleware: Express-IPFilter, Helmet, Router
+- Front-end assets: Font Awesome, Animate.css, Weather Icons, Roboto fonts
+- Quality tooling: ESLint, Stylelint, Prettier, Markdownlint, CSpell, Jest, Playwright
 
-- Website: [https://magicmirror.builders](https://magicmirror.builders)
-- Documentation: [https://docs.magicmirror.builders](https://docs.magicmirror.builders)
-- Forum: [https://forum.magicmirror.builders](https://forum.magicmirror.builders)
-  - Technical discussions: <https://forum.magicmirror.builders/category/11/core-system>
-- Discord: [https://discord.gg/J5BAtvx](https://discord.gg/J5BAtvx)
-- Blog: [https://michaelteeuw.nl/tagged/magicmirror](https://michaelteeuw.nl/tagged/magicmirror)
-- Donations: [https://magicmirror.builders/#donate](https://magicmirror.builders/#donate)
+## Configuration
+1. Copy `config/config.js.sample` to `config/config.js`:
+   ```bash
+   cp config/config.js.sample config/config.js
+   ```
+2. Update modules, API keys, or layout regions within `config/config.js` to suit your display.
+3. Restart MorningMirror to apply changes (`npm run start:x11` or restart the PM2 process).
 
-## Contributing Guidelines
+## Contributing
+Issues and pull requests are welcome at [github.com/pcheek13/MorningMirror](https://github.com/pcheek13/MorningMirror). Keep changes small, add tests where possible, and follow the included linting tools before committing.
 
-Contributions of all kinds are welcome, not only in the form of code but also with regards to
-
-- bug reports
-- documentation
-- translations
-
-For the full contribution guidelines, check out: [https://docs.magicmirror.builders/about/contributing.html](https://docs.magicmirror.builders/about/contributing.html)
-
-## Enjoying MagicMirror? Consider a donation!
-
-MagicMirror² is Open Source and free. That doesn't mean we don't need any money.
-
-Please consider a donation to help us cover the ongoing costs like webservers and email services.
-If we receive enough donations we might even be able to free up some working hours and spend some extra time improving the MagicMirror² core.
-
-To donate, please follow [this](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=G5D8E9MR5DTD2&source=url) link.
-
-<p style="text-align: center">
-  <a href="https://forum.magicmirror.builders/topic/728/magicmirror-is-voted-number-1-in-the-magpi-top-50"><img src="https://magicmirror.builders/img/magpi-best-watermark-custom.png" width="150" alt="MagPi Top 50"></a>
-</p>
+## License
+MorningMirror is released under the MIT license. See `LICENSE.md` for details.

@@ -23,7 +23,7 @@ const Log = require("logger");
  * [main command]: parse(<Array of modules>):
  * parse if module update is needed
  * --> Apply ONLY one update (first of the module list)
- * --> auto-restart MagicMirror or wait manual restart by user
+ * --> auto-restart MorningMirror or wait manual restart by user
  * return array with modules update state information for `updatenotification` module displayer information
  * [
  *		{
@@ -32,7 +32,7 @@ const Log = require("logger");
  *			inProgress = <boolean>, // an update if in progress for this module
  *			error = <boolean>, // an error if detected when updating
  *			updated = <boolean>, // updated successfully
- *			needRestart = <boolean> // manual restart of MagicMirror is required by user
+ *			needRestart = <boolean> // manual restart of MorningMirror is required by user
  *		},
  *		{
  *			...
@@ -124,7 +124,7 @@ class Updater {
 						Log.info("updatenotification: Update done");
 						setTimeout(() => this.restart(), 3000);
 					} else {
-						Log.info("updatenotification: Update done, don't forget to restart MagicMirror!");
+						Log.info("updatenotification: Update done, don't forget to restart MorningMirror!");
 						Result.needRestart = true;
 					}
 				}
@@ -141,7 +141,7 @@ class Updater {
 
 	// restart MagicMiror with "pm2": use PM2Id for restart it
 	pm2Restart () {
-		Log.info("updatenotification: PM2 will restarting MagicMirror...");
+		Log.info("updatenotification: PM2 will restarting MorningMirror...");
 		const pm2 = require("pm2");
 		pm2.restart(this.PM2Id, (err, proc) => {
 			if (err) {
@@ -152,7 +152,7 @@ class Updater {
 
 	// restart MagicMiror with "node --run start"
 	nodeRestart () {
-		Log.info("updatenotification: Restarting MagicMirror...");
+		Log.info("updatenotification: Restarting MorningMirror...");
 		const out = process.stdout;
 		const err = process.stderr;
 		const subprocess = Spawn("node --run start", { cwd: this.root_path, shell: true, detached: true, stdio: ["ignore", out, err] });
@@ -212,15 +212,15 @@ class Updater {
 		});
 	}
 
-	// check if module is MagicMirror
-	isMagicMirror (module) {
-		if (module === "MagicMirror") return true;
+	// check if module is MorningMirror
+	isMorningMirror (module) {
+		if (module === "MorningMirror") return true;
 		return false;
 	}
 
 	// search update module command
 	applyCommand (module) {
-		if (this.isMagicMirror(module.module) || !this.updates.length) return null;
+		if (this.isMorningMirror(module.module) || !this.updates.length) return null;
 		let command = null;
 		this.updates.forEach((updater) => {
 			if (updater[module]) command = updater[module];
