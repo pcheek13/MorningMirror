@@ -14,6 +14,13 @@
     z-index: 20;
 }
 
+.modulebar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
 .modulebar-button {
     z-index: 1;
     /* Border */
@@ -62,4 +69,96 @@
 .paint-it-black.visible {
     opacity: 0.85;
     pointer-events: auto;
+}
+
+.modulebar-settings {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    max-width: 320px;
+    color: inherit;
+}
+
+.modulebar-settings.open {
+    display: flex;
+}
+
+.modulebar-settings__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.modulebar-settings__title {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.modulebar-settings__close {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: inherit;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.modulebar-settings__form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modulebar-settings__group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.modulebar-settings__label {
+    font-size: 0.95em;
+    opacity: 0.8;
+}
+
+.modulebar-settings__group input {
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+    color: inherit;
+}
+
+.modulebar-settings__keypad {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.modulebar-settings__keypad button,
+.modulebar-settings__save,
+.modulebar-settings__reboot,
+.modulebar-settings__close {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: inherit;
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.modulebar-settings__actions {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.modulebar-settings__reboot {
+    background: rgba(255, 100, 100, 0.15);
+    border-color: rgba(255, 100, 100, 0.35);
 }

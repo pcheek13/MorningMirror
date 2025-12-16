@@ -60,9 +60,9 @@ let config = {
                                 useModulesFromConfig: true
                         }
                 },
-                {
-                        module: "clock",
-                        position: "top_left",
+{
+module: "clock",
+position: "top_center",
                         config: {
                                 displayType: "digital",
                                 timeFormat,
@@ -120,9 +120,9 @@ let config = {
                                 effects: []
                         }
                 },
-                {
-                        module: "MMM-DailyWeatherPrompt",
-                        position: "top_right",
+{
+module: "MMM-DailyWeatherPrompt",
+position: "top_left",
                         config: {
                                 location: "",
                                 units: "imperial",
@@ -134,40 +134,50 @@ let config = {
                                 allowLocationChange: true
                         }
                 },
-                {
-                        module: "MMM-WIFI",
-                        position: "bottom_left",
-                        config: {
-                                updateInterval: 1000 * 30,
-                                maxTimeout: 1000,
-                                animationSpeed: 0,
-                                initialLoadDelay: 1000 * 5,
-                                server: "8.8.8.8",
-                                showMessage: true,
-                                thresholds: {
-                                        strong: 50,
-                                        medium: 150,
-                                        weak: 500,
-                                },
-                                flexDirection: "row",
-                                scale: 0.45,
-                                touchTargetSize: 96,
-                                allowWifiUpdates: true,
-                                showVirtualKeyboard: true,
-                                wifiCommand: {
-                                        executable: "/bin/bash",
-                                        args: ["{modulePath}/scripts/update-wifi.sh", "{ssid}", "{password}"],
-                                        timeout: 20000,
-                                },
-                                useSudoForWifiCommand: true,
-                        }
-                },
-                {
-                        module: "MMM-Modulebar",
-                        position: "bottom_right",
-                        config: {
-                                allowForce: false,
-                                showBorder: true,
+		{
+			module: "MMM-WIFI",
+			position: "top_right",
+			config: {
+				updateInterval: 1000 * 30,
+				maxTimeout: 1000,
+				animationSpeed: 0,
+				initialLoadDelay: 1000 * 5,
+				server: "8.8.8.8",
+				showMessage: false,
+				indicatorDuration: 30000,
+				thresholds: {
+					strong: 50,
+					medium: 150,
+					weak: 500,
+				},
+				flexDirection: "row",
+				scale: 0.45,
+				touchTargetSize: 96,
+				allowWifiUpdates: true,
+				showVirtualKeyboard: true,
+				wifiCommand: {
+					executable: "/bin/bash",
+					args: ["{modulePath}/scripts/update-wifi.sh", "{ssid}", "{password}"],
+					timeout: 20000,
+				},
+				useSudoForWifiCommand: true,
+			},
+		},
+		{
+			module: "compliments",
+			position: "center",
+			config: {
+				wakeDisplayDuration: 25000,
+				profileName: ""
+			}
+		},
+{
+module: "MMM-Modulebar",
+position: "bottom_right",
+config: {
+sleepAfterMinutes: 20,
+allowForce: false,
+showBorder: true,
                                 minWidth: "0px",
                                 minHeight: "0px",
                                 picturePlacement: "left",
@@ -175,20 +185,25 @@ let config = {
                                 animationSpeed: 1000,
                                 zindex: 1000,
                                 visability: 0.5,
-                                buttons: {
-                                        "1": {
-                                                module: "all",
-                                                symbol: "toggle-on",
-                                                symbol2: "toggle-off",
-                                        },
-                                        "2": {
-                                                module: "clock",
-                                                symbol: "bell",
-                                                symbol2: "bell-slash",
-                                        }
-                                }
-                        }
-                },
+buttons: {
+"1": {
+module: "all",
+symbol: "toggle-on",
+symbol2: "toggle-off",
+},
+"2": {
+module: "clock",
+symbol: "bell",
+symbol2: "bell-slash",
+}
+},
+settingsButton: {
+module: "settings",
+symbol: "cog",
+text: "Settings"
+}
+}
+},
         ]
 };
 
