@@ -84,7 +84,6 @@ let config = {
         analogFace: "simple",
         analogPlacement: "bottom",
         analogShowDate: "top",
-        secondsColor: "#888888",
         showSunTimes: false,
         showMoonTimes: false,
         lat: 47.630539,

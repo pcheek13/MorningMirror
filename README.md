@@ -76,6 +76,7 @@ MorningMirror ships with a curated set of node modules to mirror the original ex
    ```
 2. Update modules, API keys, or layout regions within `config/config.js` to suit your display.
    - The default MMM-DynamicWeather block now reads the `OPENWEATHERMAP_API_KEY` environment variable automatically when MorningMirror runs under Node; if that variable is missing, the key stays blank so the browser never throws a `process is not defined` error. Set the variable before starting PM2 or edit `api_key` directly in the config file.
+   - The sample clock config no longer uses the deprecated `secondsColor` option that triggered warnings in the log. To style seconds, target the CSS hooks in `modules/default/clock/clock_styles.css` (e.g., `.clock-second-digital` or `.clock-second`).
 3. Restart MorningMirror to apply changes (`npm run start:x11` or restart the PM2 process).
 
 The default configuration keeps the clock in the top center, MMM-DailyWeatherPrompt in the top-left, the compliments module in the middle-center region, and MMM-DynamicWeather rendering full-screen weather effects. A new MMM-HamburgerMenu floats in the `bottom_right` region with a three-line toggle that opens a compact panel for touch-friendly controls (including the Wi‑Fi indicator and credential update form). Set your OpenWeatherMap API key in `MMM-DynamicWeather` and optionally prefill `location` for `MMM-DailyWeatherPrompt` if you do not want the on-screen prompt.
