@@ -21,6 +21,12 @@ Module.register("MMM-HamburgerMenu", {
     complimentsToggleHelper: "Controls the initial wake greeting",
     modulesLabel: "Modules",
     modulesHelper: "Toggle any default module on or off. Changes stay saved until you re-enable them.",
+    rebootLabel: "Reboot mirror",
+    rebootHelper: "Restarts the Raspberry Pi now. Unsaved changes may be lost.",
+    rebootConfirmMessage: "Reboot the mirror now?",
+    rebootPendingStatus: "Rebooting...",
+    rebootFailedStatus: "Reboot failed. Check logs.",
+    rebootCommand: "sudo /sbin/reboot",
     autoSleepMinutes: 15,
     showComplimentsOnWake: true,
     showVirtualKeyboard: true,
@@ -44,6 +50,7 @@ Module.register("MMM-HamburgerMenu", {
     this.locationStatus = "";
     this.sleepStatus = "";
     this.complimentStatus = "";
+    this.rebootStatus = "";
     this.wifiCredentials = { ssid: "", password: "" };
     this.weatherLocation = "";
     this.autoSleepMinutes = this.config.autoSleepMinutes;
@@ -383,6 +390,19 @@ Module.register("MMM-HamburgerMenu", {
     this.updateDom();
   },
 
+  handleReboot() {
+    const confirmed = window.confirm(this.config.rebootConfirmMessage);
+    if (!confirmed) {
+      return;
+    }
+
+    this.rebootStatus = this.config.rebootPendingStatus;
+    this.sendSocketNotification("HAMBURGER_REBOOT", {
+      command: this.config.rebootCommand,
+    });
+    this.updateDom();
+  },
+
   captureAvailableModules() {
     const modules = MM.getModules();
     const names = new Set();
@@ -488,6 +508,53 @@ Module.register("MMM-HamburgerMenu", {
     return button;
   },
 
+  setVirtualKeyboardVisibility(isVisible) {
+    if (!this.config.showVirtualKeyboard) {
+      return;
+    }
+
+    this.virtualKeyboardState.visible = isVisible;
+    this.applyKeyboardVisibility();
+  },
+
+  applyKeyboardVisibility() {
+    const visible = Boolean(
+      this.config.showVirtualKeyboard && this.virtualKeyboardState.visible
+    );
+
+    if (this.keyboardElement) {
+      this.keyboardElement.style.display = visible ? "flex" : "none";
+    }
+
+    if (this.settingsPanelElement) {
+      this.settingsPanelElement.classList.toggle("has-keyboard", visible);
+    }
+  },
+
+  ensureInputVisible(input) {
+    if (!input || !this.settingsScrollContainer) {
+      return;
+    }
+
+    const scrollContainer = this.settingsScrollContainer;
+
+    window.requestAnimationFrame(() => {
+      const keyboardHeight =
+        this.virtualKeyboardState.visible && this.keyboardElement
+          ? this.keyboardElement.getBoundingClientRect().height
+          : 0;
+
+      if (keyboardHeight > 0) {
+        scrollContainer.style.scrollPaddingBottom = `${Math.max(
+          200,
+          Math.ceil(keyboardHeight + 32)
+        )}px`;
+      }
+
+      input.scrollIntoView({ block: "center", behavior: "smooth" });
+    });
+  },
+
   registerKeyboardInput(input, key) {
     if (!input) {
       return;
@@ -495,13 +562,14 @@ Module.register("MMM-HamburgerMenu", {
 
     if (this.virtualKeyboardState.activeKey === key) {
       this.virtualKeyboardState.activeInput = input;
+      window.requestAnimationFrame(() => input.focus());
     }
 
     input.addEventListener("focus", () => {
       this.virtualKeyboardState.activeKey = key;
       this.virtualKeyboardState.activeInput = input;
-      this.virtualKeyboardState.visible = true;
-      this.updateDom();
+      this.setVirtualKeyboardVisibility(true);
+      this.ensureInputVisible(input);
     });
   },
 
@@ -678,6 +746,7 @@ Module.register("MMM-HamburgerMenu", {
 
     const panel = document.createElement("div");
     panel.className = "mmm-hamburger-menu__panel";
+    this.settingsPanelElement = panel;
 
     const heading = document.createElement("div");
     heading.className = "mmm-hamburger-menu__panel-title";
@@ -686,6 +755,7 @@ Module.register("MMM-HamburgerMenu", {
 
     const scrollable = document.createElement("div");
     scrollable.className = "mmm-hamburger-menu__panel-content";
+    this.settingsScrollContainer = scrollable;
 
     if (this.availableModuleNames.length > 0) {
       scrollable.appendChild(this.renderModuleToggles());
@@ -698,12 +768,14 @@ Module.register("MMM-HamburgerMenu", {
     forms.appendChild(this.renderLocationForm());
     forms.appendChild(this.renderSleepForm());
     forms.appendChild(this.renderComplimentToggle());
+    forms.appendChild(this.renderSystemControls());
 
     scrollable.appendChild(forms);
     panel.appendChild(scrollable);
 
     if (this.config.showVirtualKeyboard) {
       panel.appendChild(this.renderVirtualKeyboard());
+      this.applyKeyboardVisibility();
     }
 
     return panel;
@@ -789,6 +861,37 @@ Module.register("MMM-HamburgerMenu", {
     return form;
   },
 
+  renderSystemControls() {
+    const wrapper = document.createElement("div");
+    wrapper.className = "mmm-hamburger-menu__system";
+
+    const title = document.createElement("div");
+    title.className = "mmm-hamburger-menu__section-title";
+    title.textContent = this.config.rebootLabel;
+    wrapper.appendChild(title);
+
+    const helper = document.createElement("div");
+    helper.className = "mmm-hamburger-menu__helper";
+    helper.textContent = this.config.rebootHelper;
+    wrapper.appendChild(helper);
+
+    const rebootButton = document.createElement("button");
+    rebootButton.type = "button";
+    rebootButton.className = "mmm-hamburger-menu__save mmm-hamburger-menu__save--danger";
+    rebootButton.textContent = this.config.rebootLabel;
+    rebootButton.addEventListener("click", () => this.handleReboot());
+    wrapper.appendChild(rebootButton);
+
+    if (this.rebootStatus) {
+      const status = document.createElement("div");
+      status.className = "mmm-hamburger-menu__status";
+      status.textContent = this.rebootStatus;
+      wrapper.appendChild(status);
+    }
+
+    return wrapper;
+  },
+
   formatModuleLabel(moduleName) {
     if (!moduleName) {
       return "Unknown";
@@ -855,9 +958,8 @@ Module.register("MMM-HamburgerMenu", {
   renderVirtualKeyboard() {
     const keyboardWrapper = document.createElement("div");
     keyboardWrapper.className = "mmm-hamburger-menu__keyboard";
-    keyboardWrapper.style.display = this.virtualKeyboardState.visible
-      ? "flex"
-      : "none";
+    this.keyboardElement = keyboardWrapper;
+    this.applyKeyboardVisibility();
 
     const modeSwitcher = document.createElement("div");
     modeSwitcher.className = "mmm-hamburger-menu__keyboard-modes";
@@ -866,21 +968,13 @@ Module.register("MMM-HamburgerMenu", {
     letterButton.type = "button";
     letterButton.textContent = "ABC";
     letterButton.className = "mmm-hamburger-menu__keyboard-mode";
-    letterButton.addEventListener("click", () => {
-      this.virtualKeyboardState.mode = "letters";
-      this.virtualKeyboardState.shift = false;
-      this.updateDom();
-    });
 
     const numberButton = document.createElement("button");
     numberButton.type = "button";
     numberButton.textContent = "123";
     numberButton.className = "mmm-hamburger-menu__keyboard-mode";
-    numberButton.addEventListener("click", () => {
-      this.virtualKeyboardState.mode = "numbers";
-      this.virtualKeyboardState.shift = false;
-      this.updateDom();
-    });
+
+    const keyButtons = [];
 
     const setModeButtonState = () => {
       letterButton.classList.toggle(
@@ -893,12 +987,7 @@ Module.register("MMM-HamburgerMenu", {
       );
     };
 
-    setModeButtonState();
-    modeSwitcher.appendChild(letterButton);
-    modeSwitcher.appendChild(numberButton);
-    keyboardWrapper.appendChild(modeSwitcher);
-
-    const rows =
+    const getRows = () =>
       this.virtualKeyboardState.mode === "numbers"
         ? [
             ["1", "2", "3"],
@@ -914,8 +1003,6 @@ Module.register("MMM-HamburgerMenu", {
             ["y", "z", "@", "-", "_", ".", "⌫", "⇧"],
             ["space", "clear", "hide"],
           ];
-
-    const keyButtons = [];
 
     const refreshLabels = () => {
       setModeButtonState();
@@ -950,6 +1037,7 @@ Module.register("MMM-HamburgerMenu", {
       const cursor = start + char.length;
       input.setSelectionRange(cursor, cursor);
       input.focus();
+      this.ensureInputVisible(input);
     };
 
     const backspace = () => {
@@ -972,64 +1060,94 @@ Module.register("MMM-HamburgerMenu", {
       }
 
       input.focus();
+      this.ensureInputVisible(input);
     };
 
-    rows.forEach((row) => {
-      const rowEl = document.createElement("div");
-      rowEl.className = "mmm-hamburger-menu__keyboard-row";
+    const rowsContainer = document.createElement("div");
+    rowsContainer.className = "mmm-hamburger-menu__keyboard-rows";
 
-      row.forEach((key) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "mmm-hamburger-menu__keyboard-key";
-        button.addEventListener("click", () => {
-          const active = this.virtualKeyboardState.activeInput;
-          if (!active) {
-            return;
-          }
+    const buildRows = () => {
+      rowsContainer.innerHTML = "";
+      keyButtons.splice(0, keyButtons.length);
 
-          if (key === "space") {
-            insertAtCursor(" ");
-            return;
-          }
+      getRows().forEach((row) => {
+        const rowEl = document.createElement("div");
+        rowEl.className = "mmm-hamburger-menu__keyboard-row";
 
-          if (key === "clear") {
-            active.value = "";
-            active.focus();
-            return;
-          }
+        row.forEach((key) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "mmm-hamburger-menu__keyboard-key";
+          button.addEventListener("click", () => {
+            const active = this.virtualKeyboardState.activeInput;
+            if (!active) {
+              return;
+            }
 
-          if (key === "hide") {
-            this.virtualKeyboardState.visible = false;
-            this.virtualKeyboardState.activeInput = null;
-            this.virtualKeyboardState.activeKey = null;
-            this.updateDom();
-            return;
-          }
+            if (key === "space") {
+              insertAtCursor(" ");
+              return;
+            }
 
-          if (key === "⌫") {
-            backspace();
-            return;
-          }
+            if (key === "clear") {
+              active.value = "";
+              active.focus();
+              return;
+            }
 
-          if (key === "⇧") {
-            this.virtualKeyboardState.shift = !this.virtualKeyboardState.shift;
-            refreshLabels();
-            return;
-          }
+            if (key === "hide") {
+              this.virtualKeyboardState.visible = false;
+              this.virtualKeyboardState.activeInput = null;
+              this.virtualKeyboardState.activeKey = null;
+              this.setVirtualKeyboardVisibility(false);
+              return;
+            }
 
-          const charToInsert = this.virtualKeyboardState.shift ? key.toUpperCase() : key;
-          insertAtCursor(charToInsert);
+            if (key === "⌫") {
+              backspace();
+              return;
+            }
+
+            if (key === "⇧") {
+              this.virtualKeyboardState.shift = !this.virtualKeyboardState.shift;
+              refreshLabels();
+              return;
+            }
+
+            const charToInsert = this.virtualKeyboardState.shift ? key.toUpperCase() : key;
+            insertAtCursor(charToInsert);
+          });
+
+          keyButtons.push({ button, key });
+          rowEl.appendChild(button);
         });
 
-        keyButtons.push({ button, key });
-        rowEl.appendChild(button);
+        rowsContainer.appendChild(rowEl);
       });
 
-      keyboardWrapper.appendChild(rowEl);
+      refreshLabels();
+    };
+
+    letterButton.addEventListener("click", () => {
+      this.virtualKeyboardState.mode = "letters";
+      this.virtualKeyboardState.shift = false;
+      buildRows();
     });
 
-    refreshLabels();
+    numberButton.addEventListener("click", () => {
+      this.virtualKeyboardState.mode = "numbers";
+      this.virtualKeyboardState.shift = false;
+      buildRows();
+    });
+
+    setModeButtonState();
+
+    modeSwitcher.appendChild(letterButton);
+    modeSwitcher.appendChild(numberButton);
+    keyboardWrapper.appendChild(modeSwitcher);
+    keyboardWrapper.appendChild(rowsContainer);
+
+    buildRows();
     return keyboardWrapper;
   },
 
@@ -1067,5 +1185,18 @@ Module.register("MMM-HamburgerMenu", {
     wrapper.appendChild(bar);
 
     return wrapper;
+  },
+
+  socketNotificationReceived(notification, payload) {
+    if (notification === "HAMBURGER_REBOOT_STARTED") {
+      this.rebootStatus = this.config.rebootPendingStatus;
+      this.updateDom();
+      return;
+    }
+
+    if (notification === "HAMBURGER_REBOOT_FAILED") {
+      this.rebootStatus = payload?.message || this.config.rebootFailedStatus;
+      this.updateDom();
+    }
   }
 });
