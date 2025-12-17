@@ -39,10 +39,20 @@ Use these commands when you need to disable or re-enable PM2 boot startup for Mo
 
 If `pm2 startup` prints a command, run it verbatim so systemd registers the service. Reboot once to confirm MorningMirror starts on its own.
 
+## Desktop launcher (optional)
+If you ever close Electron, copy the included desktop shortcut to your Pi so you can restart MorningMirror from the UI:
+
+```bash
+install -m 755 morningmirror.desktop ~/Desktop/ && \
+  sed -i "s#/home/pi#${HOME}#g" ~/Desktop/morningmirror.desktop
+```
+
+Double-clicking the icon runs `npm run start:x11` from your cloned repo.
+
 ## Key features
 - Modular layout with server and client components ready for custom modules, mirroring the familiar Magic Mirror scaffolding.
 - Electron-powered shell for kiosk-style full-screen operation.
-- Default modules preconfigured to work out of the box: MMM-DynamicWeather, MMM-DailyWeatherPrompt, MMM-WIFI, clock, alert, update notification, compliments, and a touch-friendly hamburger launcher in the bottom-right corner.
+- Default modules preconfigured to work out of the box: MMM-DynamicWeather, MMM-DailyWeatherPrompt, a headless MMM-WIFI service that powers the settings Wi‑Fi indicator, clock, alert, update notification, compliments, and a touch-friendly hamburger launcher in the bottom-right corner.
 - Settings drawer now includes per-module show/hide toggles that persist locally plus a built-in on-screen keyboard for every form field.
 - Compliments wake greeting that borrows your configured profile name and shows for 25 seconds when the mirror wakes.
 - Built-in auto sleep timer (15 minutes by default) and wake compliment toggle that are both adjustable from the on-screen settings and saved locally between sessions.
@@ -68,13 +78,13 @@ MorningMirror ships with a curated set of node modules to mirror the original ex
    - The default MMM-DynamicWeather block now reads the `OPENWEATHERMAP_API_KEY` environment variable automatically when MorningMirror runs under Node; if that variable is missing, the key stays blank so the browser never throws a `process is not defined` error. Set the variable before starting PM2 or edit `api_key` directly in the config file.
 3. Restart MorningMirror to apply changes (`npm run start:x11` or restart the PM2 process).
 
-The default configuration keeps the clock in the top center, MMM-DailyWeatherPrompt in the top-left, the lightweight MMM-WIFI indicator in the top-right, the compliments module in the middle-center region, and MMM-DynamicWeather rendering full-screen weather effects. A new MMM-HamburgerMenu floats in the `bottom_right` region with a three-line toggle that opens a compact panel for touch-friendly controls. Set your OpenWeatherMap API key in `MMM-DynamicWeather` and optionally prefill `location` for `MMM-DailyWeatherPrompt` if you do not want the on-screen prompt.
+The default configuration keeps the clock in the top center, MMM-DailyWeatherPrompt in the top-left, the compliments module in the middle-center region, and MMM-DynamicWeather rendering full-screen weather effects. A new MMM-HamburgerMenu floats in the `bottom_right` region with a three-line toggle that opens a compact panel for touch-friendly controls (including the Wi‑Fi indicator and credential update form). Set your OpenWeatherMap API key in `MMM-DynamicWeather` and optionally prefill `location` for `MMM-DailyWeatherPrompt` if you do not want the on-screen prompt.
 
 Use the hamburger toggle to reveal shortcuts. The built-in settings gear broadcasts `OPEN_SETTINGS_PANEL` so any module listening for configuration updates can react, and the profile field lets you enter a name that saves locally and pushes `PROFILE_UPDATED` to the compliments module. Add more menu entries by extending `extraButtons` in the hamburger menu config without editing the module source.
 
 The settings drawer now includes an adjustable auto sleep timer (enter 0 to disable) plus a checkbox that controls whether the compliments module shows its brief wake greeting. Both values are persisted locally so they survive refreshes and keep their state unless you wipe the browser storage or reimage the Pi.
 
-The Wi-Fi indicator automatically appears for 30 seconds after boot or wake and stays visible whenever the connection is weak or missing, disappearing on its own once the link looks healthy.
+The Wi‑Fi indicator now lives inside the settings panel: it shows strong/medium/weak states, flashes while credentials are updating, and switches to an empty red slash when the connection drops.
 
 MMM-WIFI now resolves its helper script using `{modulePath}` and ships with the executable bit set, so the Wi‑Fi update button can call `scripts/update-wifi.sh` without hitting "no such file" errors on fresh Raspberry Pi installs.
 

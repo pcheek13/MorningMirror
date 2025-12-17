@@ -138,31 +138,26 @@ let config = {
     },
     {
       module: "MMM-WIFI",
-      position: "top_right",
+      position: "bottom_right",
       config: {
         updateInterval: 1000 * 30,
         maxTimeout: 1000,
         animationSpeed: 0,
         initialLoadDelay: 1000 * 5,
         server: "8.8.8.8",
-        showMessage: false,
-        indicatorDuration: 30000,
         thresholds: {
           strong: 50,
           medium: 150,
           weak: 500
         },
-        flexDirection: "row",
-        scale: 0.45,
-        touchTargetSize: 96,
         allowWifiUpdates: true,
-        showVirtualKeyboard: true,
         wifiCommand: {
           executable: "/bin/bash",
           args: ["{modulePath}/scripts/update-wifi.sh", "{ssid}", "{password}"],
           timeout: 20000
         },
-        useSudoForWifiCommand: true
+        useSudoForWifiCommand: true,
+        settingsOnly: true
       }
     },
     {
@@ -179,6 +174,7 @@ let config = {
       position: "bottom_right",
       config: {
         settingsLabel: "Settings",
+        profileLabel: "Name",
         profilePlaceholder: "Enter your name",
         saveProfileLabel: "Save",
         sleepLabel: "Sleep",

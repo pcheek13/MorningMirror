@@ -1,6 +1,6 @@
 # MMM-WIFI
 
-Display a solid Wi‑Fi logo as network signal for MorningMirror (and MorningMirror forks) and tap it to reconfigure your Wi‑Fi directly from the mirror. The default refresh cadence is tuned to 30 seconds with no fade animation to keep the icon steady instead of blinking.
+Display a solid Wi‑Fi logo as network signal for MorningMirror (and MorningMirror forks) and tap it to reconfigure your Wi‑Fi directly from the mirror. The default refresh cadence is tuned to 30 seconds with no fade animation to keep the icon steady instead of blinking. MorningMirror now ships the module in `settingsOnly` mode so it can broadcast signal quality and update status into the settings panel without rendering a standalone icon on the screen.
 
 ![Signal icons: none, weak, normal, strong, loading](https://raw.githubusercontent.com/pcheek13/MMM-WIFI/master/icons.gif)
 

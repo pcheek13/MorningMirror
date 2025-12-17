@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=MorningMirror
+Comment=Launch the MorningMirror smart mirror experience
+Exec=/bin/bash -lc 'cd "$HOME/MorningMirror" && npm run start:x11'
+Icon=/home/pi/MorningMirror/mm2.png
+Terminal=false
+Categories=Utility;System;
+StartupNotify=false
