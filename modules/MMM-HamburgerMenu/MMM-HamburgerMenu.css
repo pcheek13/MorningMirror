@@ -108,7 +108,9 @@
 
 .mmm-hamburger-menu__wifi,
 .mmm-hamburger-menu__profile,
-.mmm-hamburger-menu__location {
+.mmm-hamburger-menu__location,
+.mmm-hamburger-menu__sleep,
+.mmm-hamburger-menu__compliments {
   width: 100%;
   display: flex;
   flex-wrap: wrap;
@@ -131,7 +133,8 @@
 
 .mmm-hamburger-menu__wifi input,
 .mmm-hamburger-menu__profile input,
-.mmm-hamburger-menu__location input {
+.mmm-hamburger-menu__location input,
+.mmm-hamburger-menu__sleep input {
   flex: 1 1 160px;
   padding: 8px 10px;
   border-radius: 8px;
@@ -139,6 +142,26 @@
   background: rgba(255, 255, 255, 0.08);
   color: var(--color-text-bright, #fff);
   min-width: 160px;
+}
+
+.mmm-hamburger-menu__helper {
+  width: 100%;
+  color: var(--color-text-dimmed, #dcdcdc);
+  font-size: 0.85rem;
+}
+
+.mmm-hamburger-menu__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-bright, #fff);
+  font-size: 0.95rem;
+}
+
+.mmm-hamburger-menu__toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #ffffff;
 }
 
 .mmm-hamburger-menu__sr-only {
