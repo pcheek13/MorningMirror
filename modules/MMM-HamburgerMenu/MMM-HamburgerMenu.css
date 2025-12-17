@@ -144,6 +144,50 @@
   gap: 10px;
 }
 
+.mmm-hamburger-menu__collapsible {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.mmm-hamburger-menu__collapsible-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  background: transparent;
+  color: var(--color-text-bright, #fff);
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-align: left;
+}
+
+.mmm-hamburger-menu__collapsible-header::after {
+  content: "\f078";
+  font-family: "FontAwesome";
+  font-size: 0.85rem;
+  opacity: 0.8;
+  transition: transform 140ms ease;
+}
+
+.mmm-hamburger-menu__collapsible.is-open
+  .mmm-hamburger-menu__collapsible-header::after {
+  transform: rotate(180deg);
+}
+
+.mmm-hamburger-menu__collapsible-body {
+  padding: 0 12px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .mmm-hamburger-menu__wifi,
 .mmm-hamburger-menu__profile,
 .mmm-hamburger-menu__location,

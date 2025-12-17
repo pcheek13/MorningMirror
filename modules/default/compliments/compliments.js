@@ -4,12 +4,16 @@ Module.register("compliments", {
 	// Module config defaults.
 defaults: {
 compliments: {
-anytime: [
+allDay: [
 "Hey there sexy!",
 "You’ve got this, {name}!",
 "{name}, you're unstoppable.",
 "Keep shining, {name}.",
-"Looking sharp, {name}!"
+"Looking sharp, {name}!",
+"Keep the momentum going, {name}.",
+"{name}, you're glowing.",
+"Hello, beauty!",
+"You look sexy!"
 ],
 morning: [
 "Good morning, handsome!",
@@ -17,13 +21,6 @@ morning: [
 "How was your sleep?",
 "Rise and shine, {name}!",
 "Morning superstar, {name}."
-],
-afternoon: [
-"Hello, beauty!",
-"You look sexy!",
-"Looking good today!",
-"{name}, you're glowing.",
-"Keep the momentum going, {name}."
 ],
 evening: [
 "Wow, you look hot!",
@@ -43,8 +40,7 @@ profileName: "",
 showOnWake: true,
 morningStartTime: 3,
 morningEndTime: 12,
-afternoonStartTime: 12,
-afternoonEndTime: 17,
+eveningStartTime: 17,
 random: true,
 specialDayUnique: false
 	},
@@ -56,7 +52,7 @@ specialDayUnique: false
 	currentWeatherType: "",
 	cron_regex: /^(((\d+,)+\d+|((\d+|[*])[/]\d+|((JAN|FEB|APR|MA[RY]|JU[LN]|AUG|SEP|OCT|NOV|DEC)(-(JAN|FEB|APR|MA[RY]|JU[LN]|AUG|SEP|OCT|NOV|DEC))?))|(\d+-\d+)|\d+(-\d+)?[/]\d+(-\d+)?|\d+|[*]|(MON|TUE|WED|THU|FRI|SAT|SUN)(-(MON|TUE|WED|THU|FRI|SAT|SUN))?) ?){5}$/i,
 	date_regex: "[1-9.][0-9.][0-9.]{2}-([0][1-9]|[1][0-2])-([1-2][0-9]|[0][1-9]|[3][0-1])",
-	pre_defined_types: ["anytime", "morning", "afternoon", "evening"],
+        pre_defined_types: ["allDay", "anytime", "morning", "evening"],
 	// Define required scripts.
 	getScripts () {
 		return ["croner.js", "moment.js"];
@@ -172,19 +168,19 @@ this.triggerWakeGreeting();
 		const date = now.format("YYYY-MM-DD");
 		let compliments = [];
 
-		// Add time of day compliments
-		let timeOfDay;
-		if (hour >= this.config.morningStartTime && hour < this.config.morningEndTime) {
-			timeOfDay = "morning";
-		} else if (hour >= this.config.afternoonStartTime && hour < this.config.afternoonEndTime) {
-			timeOfDay = "afternoon";
-		} else {
-			timeOfDay = "evening";
-		}
+                // Add time of day compliments
+                const isMorning =
+                        hour >= this.config.morningStartTime && hour < this.config.morningEndTime;
+                const isEvening =
+                        hour >= this.config.eveningStartTime || hour < this.config.morningStartTime;
 
-		if (timeOfDay && this.config.compliments.hasOwnProperty(timeOfDay)) {
-			compliments = [...this.config.compliments[timeOfDay]];
-		}
+                if (isMorning && this.config.compliments.hasOwnProperty("morning")) {
+                        compliments = [...this.config.compliments.morning];
+                }
+
+                if (isEvening && this.config.compliments.hasOwnProperty("evening")) {
+                        compliments = [...compliments, ...this.config.compliments.evening];
+                }
 
 		// Add compliments based on weather
 		if (this.currentWeatherType in this.config.compliments) {
@@ -196,8 +192,12 @@ this.triggerWakeGreeting();
 			}
 		}
 
-		// Add compliments for anytime
-		Array.prototype.push.apply(compliments, this.config.compliments.anytime);
+                // Add compliments for all-day use (includes legacy "anytime" lists)
+                const allDayCompliments =
+                        this.config.compliments.allDay || this.config.compliments.anytime || [];
+                if (Array.isArray(allDayCompliments)) {
+                        Array.prototype.push.apply(compliments, allDayCompliments);
+                }
 
 		// get the list of just date entry keys
 		let temp_list = Object.keys(this.config.compliments).filter((k) => {

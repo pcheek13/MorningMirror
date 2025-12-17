@@ -21,9 +21,9 @@ Module.register("MMM-HamburgerMenu", {
     complimentsToggleHelper: "Controls the initial wake greeting",
     modulesLabel: "Modules",
     modulesHelper: "Toggle any default module on or off. Changes stay saved until you re-enable them.",
-    rebootLabel: "Reboot mirror",
-    rebootHelper: "Restarts the Raspberry Pi now. Unsaved changes may be lost.",
-    rebootConfirmMessage: "Reboot the mirror now?",
+    rebootLabel: "Restart MorningMirror",
+    rebootHelper: "",
+    rebootConfirmMessage: "Restart MorningMirror now?",
     rebootPendingStatus: "Rebooting...",
     rebootFailedStatus: "Reboot failed. Check logs.",
     rebootCommand: "sudo /sbin/reboot",
@@ -57,6 +57,7 @@ Module.register("MMM-HamburgerMenu", {
     this.showComplimentsOnWake = this.config.showComplimentsOnWake;
     this.moduleVisibility = {};
     this.availableModuleNames = [];
+    this.openSettingsSection = null;
     this.virtualKeyboardState = {
       visible: false,
       shift: false,
@@ -573,6 +574,66 @@ Module.register("MMM-HamburgerMenu", {
     });
   },
 
+  renderCollapsibleSection(sectionKey, labelText, contentBuilder) {
+    const container = document.createElement("div");
+    container.className = "mmm-hamburger-menu__collapsible";
+
+    const header = document.createElement("button");
+    header.type = "button";
+    header.className = "mmm-hamburger-menu__collapsible-header";
+    header.textContent = labelText;
+
+    const body = document.createElement("div");
+    body.className = "mmm-hamburger-menu__collapsible-body";
+
+    const syncState = (isOpen) => {
+      container.classList.toggle("is-open", isOpen);
+      header.setAttribute("aria-expanded", String(isOpen));
+      body.hidden = !isOpen;
+      body.setAttribute("aria-hidden", String(!isOpen));
+      if (isOpen && body.childElementCount === 0) {
+        body.appendChild(contentBuilder());
+      }
+    };
+
+    const initialOpen = this.openSettingsSection === sectionKey;
+    syncState(initialOpen);
+
+    header.addEventListener("click", () => {
+      const willOpen = this.openSettingsSection !== sectionKey;
+      this.openSettingsSection = willOpen ? sectionKey : null;
+
+      const siblings = container.parentElement?.querySelectorAll(
+        ".mmm-hamburger-menu__collapsible"
+      );
+      siblings?.forEach((section) => {
+        const sectionBody = section.querySelector(
+          ".mmm-hamburger-menu__collapsible-body"
+        );
+        const sectionHeader = section.querySelector(
+          ".mmm-hamburger-menu__collapsible-header"
+        );
+
+        const shouldOpen = section === container && willOpen;
+        section.classList.toggle("is-open", shouldOpen);
+        if (sectionBody) {
+          sectionBody.hidden = !shouldOpen;
+          sectionBody.setAttribute("aria-hidden", String(!shouldOpen));
+        }
+        if (sectionHeader) {
+          sectionHeader.setAttribute("aria-expanded", String(shouldOpen));
+        }
+      });
+
+      syncState(willOpen);
+    });
+
+    container.appendChild(header);
+    container.appendChild(body);
+
+    return container;
+  },
+
   renderProfileInput() {
     const form = document.createElement("form");
     form.className = "mmm-hamburger-menu__profile";
@@ -630,6 +691,9 @@ Module.register("MMM-HamburgerMenu", {
       "cog",
       () => {
         this.isSettingsOpen = !this.isSettingsOpen;
+        if (!this.isSettingsOpen) {
+          this.openSettingsSection = null;
+        }
         this.updateDom();
       },
       {},
@@ -642,14 +706,16 @@ Module.register("MMM-HamburgerMenu", {
     return button;
   },
 
-  renderWifiForm() {
+  renderWifiForm({ includeHeading = true } = {}) {
     const form = document.createElement("form");
     form.className = "mmm-hamburger-menu__wifi";
 
-    const label = document.createElement("div");
-    label.className = "mmm-hamburger-menu__section-title";
-    label.textContent = this.config.wifiLabel;
-    form.appendChild(label);
+    if (includeHeading) {
+      const label = document.createElement("div");
+      label.className = "mmm-hamburger-menu__section-title";
+      label.textContent = this.config.wifiLabel;
+      form.appendChild(label);
+    }
 
     const ssid = document.createElement("input");
     ssid.type = "text";
@@ -687,14 +753,16 @@ Module.register("MMM-HamburgerMenu", {
     return form;
   },
 
-  renderLocationForm() {
+  renderLocationForm({ includeHeading = true } = {}) {
     const form = document.createElement("form");
     form.className = "mmm-hamburger-menu__location";
 
-    const label = document.createElement("div");
-    label.className = "mmm-hamburger-menu__section-title";
-    label.textContent = this.config.locationLabel;
-    form.appendChild(label);
+    if (includeHeading) {
+      const label = document.createElement("div");
+      label.className = "mmm-hamburger-menu__section-title";
+      label.textContent = this.config.locationLabel;
+      form.appendChild(label);
+    }
 
     const input = document.createElement("input");
     input.type = "text";
@@ -757,18 +825,59 @@ Module.register("MMM-HamburgerMenu", {
     scrollable.className = "mmm-hamburger-menu__panel-content";
     this.settingsScrollContainer = scrollable;
 
-    if (this.availableModuleNames.length > 0) {
-      scrollable.appendChild(this.renderModuleToggles());
-    }
-
     const forms = document.createElement("div");
     forms.className = "mmm-hamburger-menu__forms";
-    forms.appendChild(this.renderProfileInput());
-    forms.appendChild(this.renderWifiForm());
-    forms.appendChild(this.renderLocationForm());
-    forms.appendChild(this.renderSleepForm());
-    forms.appendChild(this.renderComplimentToggle());
-    forms.appendChild(this.renderSystemControls());
+
+    if (this.availableModuleNames.length > 0) {
+      forms.appendChild(
+        this.renderCollapsibleSection(
+          "modules",
+          this.config.modulesLabel,
+          () => this.renderModuleToggles({ includeHeading: false })
+        )
+      );
+    }
+
+    forms.appendChild(
+      this.renderCollapsibleSection("profile", "Profile", () =>
+        this.renderProfileInput()
+      )
+    );
+    forms.appendChild(
+      this.renderCollapsibleSection(
+        "wifi",
+        this.config.wifiLabel,
+        () => this.renderWifiForm({ includeHeading: false })
+      )
+    );
+    forms.appendChild(
+      this.renderCollapsibleSection(
+        "location",
+        this.config.locationLabel,
+        () => this.renderLocationForm({ includeHeading: false })
+      )
+    );
+    forms.appendChild(
+      this.renderCollapsibleSection(
+        "sleep",
+        this.config.sleepTimerLabel,
+        () => this.renderSleepForm({ includeHeading: false })
+      )
+    );
+    forms.appendChild(
+      this.renderCollapsibleSection(
+        "compliments",
+        this.config.complimentsToggleLabel,
+        () => this.renderComplimentToggle({ includeHeading: false })
+      )
+    );
+    forms.appendChild(
+      this.renderCollapsibleSection(
+        "system",
+        this.config.rebootLabel,
+        () => this.renderSystemControls({ includeHeading: false })
+      )
+    );
 
     scrollable.appendChild(forms);
     panel.appendChild(scrollable);
@@ -781,14 +890,16 @@ Module.register("MMM-HamburgerMenu", {
     return panel;
   },
 
-  renderSleepForm() {
+  renderSleepForm({ includeHeading = true } = {}) {
     const form = document.createElement("form");
     form.className = "mmm-hamburger-menu__sleep";
 
-    const label = document.createElement("div");
-    label.className = "mmm-hamburger-menu__section-title";
-    label.textContent = this.config.sleepTimerLabel;
-    form.appendChild(label);
+    if (includeHeading) {
+      const label = document.createElement("div");
+      label.className = "mmm-hamburger-menu__section-title";
+      label.textContent = this.config.sleepTimerLabel;
+      form.appendChild(label);
+    }
 
     const input = document.createElement("input");
     input.type = "text";
@@ -824,14 +935,16 @@ Module.register("MMM-HamburgerMenu", {
     return form;
   },
 
-  renderComplimentToggle() {
+  renderComplimentToggle({ includeHeading = true } = {}) {
     const form = document.createElement("form");
     form.className = "mmm-hamburger-menu__compliments";
 
-    const label = document.createElement("div");
-    label.className = "mmm-hamburger-menu__section-title";
-    label.textContent = this.config.complimentsToggleLabel;
-    form.appendChild(label);
+    if (includeHeading) {
+      const label = document.createElement("div");
+      label.className = "mmm-hamburger-menu__section-title";
+      label.textContent = this.config.complimentsToggleLabel;
+      form.appendChild(label);
+    }
 
     const toggleWrapper = document.createElement("label");
     toggleWrapper.className = "mmm-hamburger-menu__toggle";
@@ -861,19 +974,23 @@ Module.register("MMM-HamburgerMenu", {
     return form;
   },
 
-  renderSystemControls() {
+  renderSystemControls({ includeHeading = true } = {}) {
     const wrapper = document.createElement("div");
     wrapper.className = "mmm-hamburger-menu__system";
 
-    const title = document.createElement("div");
-    title.className = "mmm-hamburger-menu__section-title";
-    title.textContent = this.config.rebootLabel;
-    wrapper.appendChild(title);
+    if (includeHeading) {
+      const title = document.createElement("div");
+      title.className = "mmm-hamburger-menu__section-title";
+      title.textContent = this.config.rebootLabel;
+      wrapper.appendChild(title);
+    }
 
-    const helper = document.createElement("div");
-    helper.className = "mmm-hamburger-menu__helper";
-    helper.textContent = this.config.rebootHelper;
-    wrapper.appendChild(helper);
+    if (this.config.rebootHelper) {
+      const helper = document.createElement("div");
+      helper.className = "mmm-hamburger-menu__helper";
+      helper.textContent = this.config.rebootHelper;
+      wrapper.appendChild(helper);
+    }
 
     const rebootButton = document.createElement("button");
     rebootButton.type = "button";
@@ -915,14 +1032,16 @@ Module.register("MMM-HamburgerMenu", {
       .join(" ");
   },
 
-  renderModuleToggles() {
+  renderModuleToggles({ includeHeading = true } = {}) {
     const wrapper = document.createElement("div");
     wrapper.className = "mmm-hamburger-menu__modules";
 
-    const title = document.createElement("div");
-    title.className = "mmm-hamburger-menu__section-title";
-    title.textContent = this.config.modulesLabel;
-    wrapper.appendChild(title);
+    if (includeHeading) {
+      const title = document.createElement("div");
+      title.className = "mmm-hamburger-menu__section-title";
+      title.textContent = this.config.modulesLabel;
+      wrapper.appendChild(title);
+    }
 
     const helper = document.createElement("div");
     helper.className = "mmm-hamburger-menu__helper";
