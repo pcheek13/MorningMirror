@@ -60,22 +60,30 @@ module.exports = NodeHelper.create({
 
             const finalExecutable = config.useSudoForWifiCommand ? "sudo" : executable;
             const finalArgs = config.useSudoForWifiCommand
-                ? [executable, ...processedArgs]
+                ? ["-n", executable, ...processedArgs]
                 : processedArgs;
 
-            execFile(finalExecutable, finalArgs, { timeout }, error => {
+            execFile(finalExecutable, finalArgs, { timeout }, (error, stdout = "", stderr = "") => {
                 if (error) {
+                    const detail = error.killed
+                        ? `Wi-Fi helper timed out after ${timeout}ms. Ensure this user can run sudo without a password.`
+                        : stderr.trim() || error.message;
+
+                    const permissionDenied = /sudo: a password is required/i.test(stderr);
+
                     this.sendSocketNotification("MMM_WIFI_WIFI_UPDATE_STATUS", {
                         success: false,
-                        messageKey: "wifiUpdateFailed",
-                        detail: error.message,
+                        messageKey: permissionDenied ? "wifiPermissionDenied" : "wifiUpdateFailed",
+                        detail,
                     });
-                } else {
-                    this.sendSocketNotification("MMM_WIFI_WIFI_UPDATE_STATUS", {
-                        success: true,
-                        messageKey: "wifiUpdateSuccess",
-                    });
+                    return;
                 }
+
+                this.sendSocketNotification("MMM_WIFI_WIFI_UPDATE_STATUS", {
+                    success: true,
+                    messageKey: "wifiUpdateSuccess",
+                    detail: stdout.trim(),
+                });
             });
         }
     },

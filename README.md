@@ -43,6 +43,7 @@ If `pm2 startup` prints a command, run it verbatim so systemd registers the serv
 - Modular layout with server and client components ready for custom modules, mirroring the familiar Magic Mirror scaffolding.
 - Electron-powered shell for kiosk-style full-screen operation.
 - Default modules preconfigured to work out of the box: MMM-DynamicWeather, MMM-DailyWeatherPrompt, MMM-WIFI, clock, alert, update notification, compliments, and a touch-friendly hamburger launcher in the bottom-right corner.
+- Settings drawer now includes per-module show/hide toggles that persist locally plus a built-in on-screen keyboard for every form field.
 - Compliments wake greeting that borrows your configured profile name and shows for 25 seconds when the mirror wakes.
 - Built-in auto sleep timer (15 minutes by default) and wake compliment toggle that are both adjustable from the on-screen settings and saved locally between sessions.
 - Development tooling (ESLint, Prettier, Jest, Stylelint) included for rapid module creation.

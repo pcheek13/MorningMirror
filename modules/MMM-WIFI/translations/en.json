@@ -11,5 +11,6 @@
   "wifiUpdatePending": "Updating Wi-Fi settings...",
   "wifiUpdateSuccess": "Wi-Fi updated. Attempting to reconnect.",
   "wifiUpdateFailed": "Wi-Fi update failed",
+  "wifiPermissionDenied": "Wi-Fi update blocked: sudo permissions required",
   "wifiMissingFields": "Please enter both SSID and password."
 }

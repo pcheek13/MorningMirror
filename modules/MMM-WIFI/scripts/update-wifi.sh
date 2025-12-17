@@ -13,6 +13,19 @@ BACKUP_SUFFIX=$(date +%Y%m%d%H%M%S)
 BACKUP_PATH="${WPA_CONF}.${BACKUP_SUFFIX}.bak"
 TMP_NETWORK=$(mktemp)
 
+cleanup() {
+  rm -f "$TMP_NETWORK"
+}
+
+trap cleanup EXIT
+
+if [[ "$EUID" -ne 0 ]]; then
+  if ! sudo -n true 2>/dev/null; then
+    echo "Passwordless sudo is required to update Wi-Fi." >&2
+    exit 3
+  fi
+fi
+
 # Ensure the configuration file exists and is writable
 sudo install -d -m 755 /etc/wpa_supplicant
 if [[ ! -f "$WPA_CONF" ]]; then
@@ -38,10 +51,11 @@ sudo cp "$WPA_CONF" "$BACKUP_PATH"
 echo "# Added by MMM-WIFI on $(date)" | sudo tee -a "$WPA_CONF" >/dev/null
 sudo tee -a "$WPA_CONF" < "$TMP_NETWORK" >/dev/null
 
-rm -f "$TMP_NETWORK"
-
 # Reconfigure Wi-Fi and restart MorningMirror
-sudo wpa_cli -i wlan0 reconfigure || sudo systemctl restart wpa_supplicant.service
+if ! timeout 15s sudo wpa_cli -i wlan0 reconfigure; then
+  echo "wpa_cli reconfigure failed or timed out; restarting wpa_supplicant" >&2
+  sudo systemctl restart wpa_supplicant.service
+fi
 
 PM2_PROCESS_NAME=${PM2_PROCESS_NAME:-morningmirror}
 if command -v pm2 >/dev/null 2>&1; then
