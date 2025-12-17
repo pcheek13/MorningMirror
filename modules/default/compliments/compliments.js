@@ -285,17 +285,15 @@ if (!text) {
 return "";
 }
 const profileName = (this.profileName || this.config.profileName || "").trim();
-const fallbackName = profileName || "you";
+const fallbackName = profileName || "You";
 
 if (text.includes("{name}")) {
 return text.replace(/\{name\}/gi, fallbackName);
 }
 
-if (profileName) {
-return `${profileName}, ${text}`;
-}
+const complimentText = profileName ? `${profileName}, ${text}` : text;
 
-return text;
+return complimentText.replace(/\byou\b/gi, "You");
 },
 
 triggerWakeGreeting () {
