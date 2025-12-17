@@ -616,6 +616,7 @@ Module.register("MMM-HamburgerMenu", {
       container.classList.toggle("is-open", isOpen);
       header.setAttribute("aria-expanded", String(isOpen));
       body.hidden = !isOpen;
+      body.style.display = isOpen ? "flex" : "none";
       body.setAttribute("aria-hidden", String(!isOpen));
       if (isOpen && body.childElementCount === 0) {
         body.appendChild(contentBuilder());
@@ -1146,6 +1147,11 @@ Module.register("MMM-HamburgerMenu", {
     numberButton.textContent = "123";
     numberButton.className = "mmm-hamburger-menu__keyboard-mode";
 
+    const symbolButton = document.createElement("button");
+    symbolButton.type = "button";
+    symbolButton.textContent = "!?&";
+    symbolButton.className = "mmm-hamburger-menu__keyboard-mode";
+
     const keyButtons = [];
 
     const setModeButtonState = () => {
@@ -1157,24 +1163,38 @@ Module.register("MMM-HamburgerMenu", {
         "is-active",
         this.virtualKeyboardState.mode === "numbers"
       );
+      symbolButton.classList.toggle(
+        "is-active",
+        this.virtualKeyboardState.mode === "symbols"
+      );
     };
 
-    const getRows = () =>
-      this.virtualKeyboardState.mode === "numbers"
-        ? [
-            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
-            ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")"],
-            ["-", "_", "=", "+", "[", "]", "{", "}", "\\", "/"],
-            [".", ",", ":", ";", "\"", "'", "?", "|", "⌫", "⇧"],
-            ["space", "clear", "hide"],
-          ]
-        : [
-            ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
-            ["a", "s", "d", "f", "g", "h", "j", "k", "l", "'", "\""],
-            ["⇧", "z", "x", "c", "v", "b", "n", "m", "-", "_", "@", ".", "⌫"],
-            ["!", "#", "$", "%", "&", "*", "(", ")", "?", "/"],
-            ["space", "clear", "hide"],
-          ];
+    const getRows = () => {
+      if (this.virtualKeyboardState.mode === "numbers") {
+        return [
+          ["1", "2", "3", "4", "5"],
+          ["6", "7", "8", "9", "0"],
+          ["space", "clear", "⌫", "hide"],
+        ];
+      }
+
+      if (this.virtualKeyboardState.mode === "symbols") {
+        return [
+          ["!", "?", "@", ".", ","],
+          ["#", "$", "%", "&", "*"],
+          ["(", ")", "[", "]", "\\"],
+          ["-", "_", "+", "=", "|"],
+          ["space", "clear", "⌫", "hide"],
+        ];
+      }
+
+      return [
+        ["a", "b", "c", "d", "e", "f", "g", "h"],
+        ["i", "j", "k", "l", "m", "n", "o", "p"],
+        ["q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "⌫"],
+        ["space", "⇧", "clear", "hide"],
+      ];
+    };
 
     const refreshLabels = () => {
       setModeButtonState();
@@ -1286,7 +1306,9 @@ Module.register("MMM-HamburgerMenu", {
               return;
             }
 
-            const charToInsert = this.virtualKeyboardState.shift ? key.toUpperCase() : key;
+            const charToInsert = this.virtualKeyboardState.shift
+              ? key.toUpperCase()
+              : key;
             insertAtCursor(charToInsert);
           });
 
@@ -1312,10 +1334,17 @@ Module.register("MMM-HamburgerMenu", {
       buildRows();
     });
 
+    symbolButton.addEventListener("click", () => {
+      this.virtualKeyboardState.mode = "symbols";
+      this.virtualKeyboardState.shift = false;
+      buildRows();
+    });
+
     setModeButtonState();
 
     modeSwitcher.appendChild(letterButton);
     modeSwitcher.appendChild(numberButton);
+    modeSwitcher.appendChild(symbolButton);
     keyboardWrapper.appendChild(modeSwitcher);
     keyboardWrapper.appendChild(rowsContainer);
 
