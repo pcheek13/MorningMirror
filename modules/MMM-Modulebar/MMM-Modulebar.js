@@ -116,6 +116,11 @@ Module.register("MMM-Modulebar", {
     menu.id = `${this.identifier}_menu`;
     menu.style.flexDirection = this.config.direction;
 
+    this.modulesHidden = this.areAllOtherModulesHidden();
+    if (this.modulesHidden) {
+      overlay.classList.add("visible");
+    }
+
     const sortedButtons = Object.keys(this.config.buttons).sort((a, b) => Number(a) - Number(b));
     const regularButtons = [];
     const toggleButtons = [];
@@ -146,6 +151,14 @@ Module.register("MMM-Modulebar", {
     container.appendChild(this.createSettingsPanel());
     this.syncAllButtonVisuals();
     return container;
+  },
+
+  areAllOtherModulesHidden() {
+    const modules = MM.getModules();
+    return !modules.some((module) => {
+      const isModulebar = module.name === this.name && module.identifier === this.identifier;
+      return !isModulebar && !module.hidden;
+    });
   },
 
   resetSleepTimer() {
@@ -242,6 +255,15 @@ Module.register("MMM-Modulebar", {
           module.show(this.config.animationSpeed, 0, { force: this.config.allowForce });
         }
       });
+    } else {
+      modules.forEach((module) => {
+        if (module.name === this.name && module.identifier === this.identifier) {
+          return;
+        }
+        if (module.hidden) {
+          module.show(this.config.animationSpeed, 0, { force: this.config.allowForce });
+        }
+      });
     }
 
     this.modulesHidden = false;
@@ -285,6 +307,18 @@ Module.register("MMM-Modulebar", {
         text.innerHTML = data.text;
       }
     }
+  },
+
+  matchesInstance(module, idnum) {
+    if (!Array.isArray(idnum)) {
+      return idnum == null || module.data.identifier.endsWith(`_${idnum}`);
+    }
+    return idnum.some((id) => module.data.identifier.endsWith(`_${id}`));
+  },
+
+  targetsAreHidden(modules, data) {
+    const targets = modules.filter((module) => module.name === data.module && this.matchesInstance(module, data.idnum));
+    return targets.length > 0 && targets.every((module) => module.hidden);
   },
 
   syncAllButtonVisuals() {
@@ -372,58 +406,48 @@ Module.register("MMM-Modulebar", {
       }
 
       for (let i = 0; i < modules.length; i++) {
-        if (modules[i].name === data.module) {
+        if (modules[i].name === data.module && self.matchesInstance(modules[i], data.idnum)) {
           const idnr = modules[i].data.identifier.split("_");
-          let idnumber;
-          if (Array.isArray(data.idnum)) {
-            idnumber = data.idnum.find(function (element) {
-              return element == idnr[1];
-            });
-          } else {
-            idnumber = data.idnum;
-          }
 
-          if (idnr[1] == idnumber || data.idnum == null) {
-            if (modules[i].hidden) {
-              if (data.showUrl != null) {
-                fetch(data.showUrl);
-                console.log("Visiting show URL: " + data.showUrl);
+          if (modules[i].hidden) {
+            if (data.showUrl != null) {
+              fetch(data.showUrl);
+              console.log("Visiting show URL: " + data.showUrl);
+            }
+            modules[i].show(self.config.animationSpeed, 0, { force: self.config.allowForce });
+            if (typeof data.symbol !== "undefined") {
+              symbol.className = faclassName + data.symbol;
+              if (data.size) {
+                symbol.className += " fa-" + data.size;
+                symbol.className += data.size == 1 ? "g" : "x";
               }
-              modules[i].show(self.config.animationSpeed, 0, { force: self.config.allowForce });
-              if (typeof data.symbol !== "undefined") {
-                symbol.className = faclassName + data.symbol;
-                if (data.size) {
-                  symbol.className += " fa-" + data.size;
-                  symbol.className += data.size == 1 ? "g" : "x";
-                }
-              } else if (typeof data.img !== "undefined") {
-                image.className = "modulebar-picture";
-                image.src = data.img;
+            } else if (typeof data.img !== "undefined") {
+              image.className = "modulebar-picture";
+              image.src = data.img;
+            }
+            if (typeof data.text !== "undefined") {
+              text.innerHTML = data.text;
+            }
+            console.log("Showing " + modules[i].name + " ID: " + idnr[1]);
+          } else {
+            modules[i].hide(self.config.animationSpeed, 0, { force: self.config.allowForce });
+            if (typeof data.symbol2 !== "undefined") {
+              symbol.className = faclassName + data.symbol2;
+              if (data.size) {
+                symbol.className += " fa-" + data.size;
+                symbol.className += data.size == 1 ? "g" : "x";
               }
-              if (typeof data.text !== "undefined") {
-                text.innerHTML = data.text;
-              }
-              console.log("Showing " + modules[i].name + " ID: " + idnr[1]);
-            } else {
-              modules[i].hide(self.config.animationSpeed, 0, { force: self.config.allowForce });
-              if (typeof data.symbol2 !== "undefined") {
-                symbol.className = faclassName + data.symbol2;
-                if (data.size) {
-                  symbol.className += " fa-" + data.size;
-                  symbol.className += data.size == 1 ? "g" : "x";
-                }
-              } else if (typeof data.img2 !== "undefined") {
-                image.className = "modulebar-picture";
-                image.src = data.img2;
-              }
-              if (typeof data.text2 !== "undefined") {
-                text.innerHTML = data.text2;
-              }
-              console.log("Hiding " + modules[i].name + " ID: " + idnr[1]);
-              if (data.hideUrl != null) {
-                fetch(data.hideUrl);
-                console.log("Visiting hide URL: " + data.hideUrl);
-              }
+            } else if (typeof data.img2 !== "undefined") {
+              image.className = "modulebar-picture";
+              image.src = data.img2;
+            }
+            if (typeof data.text2 !== "undefined") {
+              text.innerHTML = data.text2;
+            }
+            console.log("Hiding " + modules[i].name + " ID: " + idnr[1]);
+            if (data.hideUrl != null) {
+              fetch(data.hideUrl);
+              console.log("Visiting hide URL: " + data.hideUrl);
             }
           }
         }
@@ -484,8 +508,12 @@ Module.register("MMM-Modulebar", {
       item.appendChild(text);
     }
 
+    const visuals = { symbol, image, text, data, faclassName };
+
     if (data.module === "all") {
-      this.allButtonVisuals = { symbol, image, text, data, faclassName };
+      this.allButtonVisuals = visuals;
+    } else if (data.module !== "settings" && this.targetsAreHidden(modules, data)) {
+      this.updateToggleVisuals(true, visuals);
     }
 
     return item;

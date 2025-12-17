@@ -2,7 +2,7 @@
 
 This an extension for the [MorningMirror](https://magicmirror.builders/).
 
-This Module adds a touch menu to hide / show the defined (in config.js) modules. The refreshed layout ships with larger, high-contrast buttons, a glassy background that floats above full-screen effects, and an overlay that you can tap anywhere to wake the mirror when everything is hidden.
+This Module adds a touch menu to hide / show the defined (in config.js) modules. The refreshed layout ships with larger, high-contrast buttons, a glassy background that floats above full-screen effects, and an overlay that you can tap anywhere to wake the mirror when everything is hidden. The buttons now sync their visuals to the actual visibility of each target module on startup, so the on/off state is accurate even if other modules (profiles, schedules, etc.) hide things before Modulebar loads.
 
 ### Screen shots
 
@@ -28,16 +28,10 @@ This is my own mirrors view (Bottom Bar) using some addition in the custom.css [
 
 ### Raspberry Pi 5 one-liner install (copy/paste)
 
-Run this from a clean Raspberry Pi 5 to clone MorningMirror (which includes this module), install runtime dependencies, and launch the mirror immediately:
+Run this single command from a clean Raspberry Pi 5 to clone MorningMirror (which includes MMM-Modulebar), install runtime dependencies, and launch the mirror immediately:
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
-  sudo apt update && sudo apt install -y git nodejs && \
-  git clone https://github.com/pcheek13/MorningMirror.git && \
-  cd MorningMirror && \
-  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev && \
-  cp config/config.js.sample config/config.js && \
-  npm start
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt update && sudo apt install -y git nodejs && git clone https://github.com/pcheek13/MorningMirror.git && cd MorningMirror && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev && cp config/config.js.sample config/config.js && npm start
 ```
 
 The command installs Node 20, clones the repository, installs only the production dependencies (including Electron), copies the sample config into place, and boots the UI so you can immediately see the Modulebar in the `bottom_center` region.
@@ -152,6 +146,14 @@ An example:
     },
   }
 ````
+
+### UI enhancement ideas
+
+* **Align with your region:** Use `direction: "row-reverse"` when placing the bar in `bottom_bar` to keep the hide-all toggle on the right while the text flows naturally toward the center of the screen.
+* **Enforce consistent sizing:** Set `minWidth`/`minHeight` (for example `minWidth: "80px", minHeight: "72px"`) so touch targets stay finger-friendly and the bar keeps a tidy rhythm when you mix text and icon-only buttons.
+* **Swap icon placement on portrait screens:** Combine `picturePlacement: "top"` with `direction: "column"` to stack icons above text for narrow displays or framed monitors, and flip to `left`/`row` for landscape TVs.
+* **Add an always-visible wake handle:** Give your hide-all toggle a contrasting color via custom CSS (e.g., `.modulebar-button:last-of-type { background: #0b8; }`) so sleepers always know where to tap to wake the mirror.
+* **Soften the overlay:** If the blackout feels harsh, lower `visability` to around `0.25` and lighten the overlay in CSS (`background-color: rgba(0,0,0,0.6)`) so the UI remains perceivable while still dimming unused modules.
 
 ### Custom-CSS
 
