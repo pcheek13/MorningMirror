@@ -3,6 +3,7 @@
 Module.register("MMM-HamburgerMenu", {
   defaults: {
     settingsLabel: "Settings",
+    profileLabel: "Name",
     profilePlaceholder: "Enter your name",
     saveProfileLabel: "Save",
     sleepLabel: "Sleep",
@@ -57,13 +58,19 @@ Module.register("MMM-HamburgerMenu", {
     this.showComplimentsOnWake = this.config.showComplimentsOnWake;
     this.moduleVisibility = {};
     this.availableModuleNames = [];
-    this.openSettingsSection = null;
+    this.openSettingsSections = new Set();
     this.virtualKeyboardState = {
       visible: false,
       shift: false,
       activeKey: null,
       activeInput: null,
       mode: "letters",
+    };
+    this.wifiIndicator = {
+      strength: "none",
+      isUpdating: false,
+      ping: null,
+      statusText: "",
     };
     this.sleepTimeout = null;
 
@@ -87,6 +94,25 @@ Module.register("MMM-HamburgerMenu", {
     this.applyComplimentPreference();
     this.resetSleepTimer();
     this.registerActivityListeners();
+  },
+
+  notificationReceived(notification, payload) {
+    if (notification === "WIFI_STATUS_UPDATE") {
+      const nextIndicator = {
+        strength: payload?.strength || "none",
+        isUpdating: Boolean(payload?.isUpdating),
+        ping: typeof payload?.ping === "number" ? payload.ping : this.wifiIndicator.ping,
+        statusText: payload?.statusText || this.wifiIndicator.statusText,
+      };
+
+      this.wifiIndicator = nextIndicator;
+
+      if (payload?.statusText) {
+        this.wifiStatus = payload.statusText;
+      }
+
+      this.updateDom();
+    }
   },
 
   getStyles() {
@@ -596,34 +622,17 @@ Module.register("MMM-HamburgerMenu", {
       }
     };
 
-    const initialOpen = this.openSettingsSection === sectionKey;
+    const initialOpen = this.openSettingsSections.has(sectionKey);
     syncState(initialOpen);
 
     header.addEventListener("click", () => {
-      const willOpen = this.openSettingsSection !== sectionKey;
-      this.openSettingsSection = willOpen ? sectionKey : null;
+      const willOpen = !container.classList.contains("is-open");
 
-      const siblings = container.parentElement?.querySelectorAll(
-        ".mmm-hamburger-menu__collapsible"
-      );
-      siblings?.forEach((section) => {
-        const sectionBody = section.querySelector(
-          ".mmm-hamburger-menu__collapsible-body"
-        );
-        const sectionHeader = section.querySelector(
-          ".mmm-hamburger-menu__collapsible-header"
-        );
-
-        const shouldOpen = section === container && willOpen;
-        section.classList.toggle("is-open", shouldOpen);
-        if (sectionBody) {
-          sectionBody.hidden = !shouldOpen;
-          sectionBody.setAttribute("aria-hidden", String(!shouldOpen));
-        }
-        if (sectionHeader) {
-          sectionHeader.setAttribute("aria-expanded", String(shouldOpen));
-        }
-      });
+      if (willOpen) {
+        this.openSettingsSections.add(sectionKey);
+      } else {
+        this.openSettingsSections.delete(sectionKey);
+      }
 
       syncState(willOpen);
     });
@@ -640,7 +649,7 @@ Module.register("MMM-HamburgerMenu", {
 
     const label = document.createElement("label");
     label.className = "mmm-hamburger-menu__profile-label";
-    label.textContent = "Profile";
+    label.textContent = this.config.profileLabel;
     label.setAttribute("for", `${this.identifier}-profile-input`);
     form.appendChild(label);
 
@@ -692,7 +701,7 @@ Module.register("MMM-HamburgerMenu", {
       () => {
         this.isSettingsOpen = !this.isSettingsOpen;
         if (!this.isSettingsOpen) {
-          this.openSettingsSection = null;
+          this.openSettingsSections.clear();
         }
         this.updateDom();
       },
@@ -706,15 +715,59 @@ Module.register("MMM-HamburgerMenu", {
     return button;
   },
 
+  renderWifiIndicator() {
+    const wrapper = document.createElement("div");
+    wrapper.className = "mmm-hamburger-menu__wifi-indicator";
+    wrapper.setAttribute("aria-label", `Wi-Fi signal: ${this.wifiIndicator.strength}`);
+
+    const levels = [6, 10, 14, 18];
+    const activeBars =
+      this.wifiIndicator.strength === "strong"
+        ? 4
+        : this.wifiIndicator.strength === "medium"
+          ? 3
+          : this.wifiIndicator.strength === "weak"
+            ? 2
+            : 0;
+
+    levels.forEach((height, index) => {
+      const bar = document.createElement("span");
+      bar.className = "mmm-hamburger-menu__wifi-bar";
+      bar.style.height = `${height}px`;
+
+      if (index < activeBars) {
+        bar.classList.add("is-active");
+      }
+
+      wrapper.appendChild(bar);
+    });
+
+    if (this.wifiIndicator.isUpdating) {
+      wrapper.classList.add("is-updating");
+    }
+
+    if (this.wifiIndicator.strength === "none") {
+      wrapper.classList.add("is-disconnected");
+    }
+
+    return wrapper;
+  },
+
   renderWifiForm({ includeHeading = true } = {}) {
     const form = document.createElement("form");
     form.className = "mmm-hamburger-menu__wifi";
 
     if (includeHeading) {
+      const heading = document.createElement("div");
+      heading.className = "mmm-hamburger-menu__section-title-row";
+
       const label = document.createElement("div");
       label.className = "mmm-hamburger-menu__section-title";
       label.textContent = this.config.wifiLabel;
-      form.appendChild(label);
+
+      heading.appendChild(label);
+      heading.appendChild(this.renderWifiIndicator());
+      form.appendChild(heading);
     }
 
     const ssid = document.createElement("input");
@@ -1109,17 +1162,17 @@ Module.register("MMM-HamburgerMenu", {
     const getRows = () =>
       this.virtualKeyboardState.mode === "numbers"
         ? [
-            ["1", "2", "3"],
-            ["4", "5", "6"],
-            ["7", "8", "9"],
-            ["0", "⌫", "clear"],
-            ["space", "hide"],
+            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+            ["!", "@", "#", "$", "%", "^", "&", "*", "(", ")"],
+            ["-", "_", "=", "+", "[", "]", "{", "}", "\\", "/"],
+            [".", ",", ":", ";", "\"", "'", "?", "|", "⌫", "⇧"],
+            ["space", "clear", "hide"],
           ]
         : [
-            ["a", "b", "c", "d", "e", "f", "g", "h"],
-            ["i", "j", "k", "l", "m", "n", "o", "p"],
-            ["q", "r", "s", "t", "u", "v", "w", "x"],
-            ["y", "z", "@", "-", "_", ".", "⌫", "⇧"],
+            ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+            ["a", "s", "d", "f", "g", "h", "j", "k", "l", "'", "\""],
+            ["⇧", "z", "x", "c", "v", "b", "n", "m", "-", "_", "@", ".", "⌫"],
+            ["!", "#", "$", "%", "&", "*", "(", ")", "?", "/"],
             ["space", "clear", "hide"],
           ];
 
