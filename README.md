@@ -42,8 +42,7 @@ If `pm2 startup` prints a command, run it verbatim so systemd registers the serv
 ## Key features
 - Modular layout with server and client components ready for custom modules, mirroring the familiar Magic Mirror scaffolding.
 - Electron-powered shell for kiosk-style full-screen operation.
-- Default modules preconfigured to work out of the box: MMM-DynamicWeather, MMM-DailyWeatherPrompt, MMM-WIFI, clock, alert, update notification, and Modulebar controls anchored in valid regions.
-- Built-in sleep timer that blanks the mirror after 20 minutes and restores each module to its prior on/off state when you wake the mirror with the toggle-all button.
+- Default modules preconfigured to work out of the box: MMM-DynamicWeather, MMM-DailyWeatherPrompt, MMM-WIFI, clock, alert, update notification, compliments, and a touch-friendly hamburger launcher in the bottom-right corner.
 - Compliments wake greeting that borrows your configured profile name and shows for 25 seconds when the mirror wakes.
 - Development tooling (ESLint, Prettier, Jest, Stylelint) included for rapid module creation.
 
@@ -67,11 +66,9 @@ MorningMirror ships with a curated set of node modules to mirror the original ex
    - The default MMM-DynamicWeather block now reads the `OPENWEATHERMAP_API_KEY` environment variable automatically when MorningMirror runs under Node; if that variable is missing, the key stays blank so the browser never throws a `process is not defined` error. Set the variable before starting PM2 or edit `api_key` directly in the config file.
 3. Restart MorningMirror to apply changes (`npm run start:x11` or restart the PM2 process).
 
-The default configuration ships with the MMM-Modulebar docked on the `bottom_center` region so you can toggle core modules on or off without editing the config file. The bar follows the [MMM-Modulebar README](modules/MMM-Modulebar/README.md) defaults (Font Awesome icons plus text, 64px minimum buttons, and a wake/sleep toggle) and includes buttons for DynamicWeather effects, DailyWeatherPrompt, Wi-Fi, compliments, and the clock alongside the always-on settings gear. The clock anchors to the top center, MMM-DailyWeatherPrompt sits in the top-left, the lightweight MMM-WIFI indicator lives in the top-right, the compliments module sits in the middle-center region, and MMM-DynamicWeather still renders full-screen weather effects. Set your OpenWeatherMap API key in `MMM-DynamicWeather` and optionally prefill `location` for `MMM-DailyWeatherPrompt` if you do not want the on-screen prompt.
+The default configuration keeps the clock in the top center, MMM-DailyWeatherPrompt in the top-left, the lightweight MMM-WIFI indicator in the top-right, the compliments module in the middle-center region, and MMM-DynamicWeather rendering full-screen weather effects. A new MMM-HamburgerMenu floats in the `bottom_right` region with a three-line toggle that opens a compact panel for touch-friendly controls. Set your OpenWeatherMap API key in `MMM-DynamicWeather` and optionally prefill `location` for `MMM-DailyWeatherPrompt` if you do not want the on-screen prompt.
 
-All Modulebar assets (CSS, helper scripts, and Font Awesome hooks) ship with the repo, and the `npm ci --omit=dev` step in the quick-install block pulls every required node module so the dock is visible immediately after cloning on a Raspberry Pi 5. The bar is now pinned to the bottom of the viewport with a stacking order derived from `config.modules[].config.zindex`, keeping it above full-screen effects like DynamicWeather; lower the value if you add your own overlays that should sit on top.
-
-Use the gear icon on the Modulebar to open an on-screen settings panel with keypad-friendly inputs for location (city/state/country or ZIP), Wi-Fi SSID/password, and a profile name. Saving pushes updates to dependent modules (DailyWeatherPrompt, compliments, and Wi-Fi), and the same panel exposes a reboot shortcut for the Pi.
+Use the hamburger toggle to reveal shortcuts. The built-in settings gear broadcasts `OPEN_SETTINGS_PANEL` so any module listening for configuration updates can react, and the profile field lets you enter a name that saves locally and pushes `PROFILE_UPDATED` to the compliments module. Add more menu entries by extending `extraButtons` in the hamburger menu config without editing the module source.
 
 The Wi-Fi indicator automatically appears for 30 seconds after boot or wake and stays visible whenever the connection is weak or missing, disappearing on its own once the link looks healthy.
 
@@ -91,8 +88,6 @@ MMM-WIFI now resolves its helper script using `{modulePath}` and ships with the 
     npm start
   ```
 - **PM2 stuck in `stopped` state**: Ensure PM2 is using the npm script (`pm2 start npm --name morningmirror -- start`) and that your display server is available (`DISPLAY=:0` for X11 or `WAYLAND_DISPLAY=wayland-1` for Wayland).
-- **Modulebar buttons not visible**: The Modulebar now pulls Font Awesome directly from MorningMirror's shared `/css/font-awesome.css`. Pull the latest code, restart (`pm2 restart morningmirror` or `npm start`), and reload the browser cache if the icons still look blank.
-
 ## Contributing
 Issues and pull requests are welcome at [github.com/pcheek13/MorningMirror](https://github.com/pcheek13/MorningMirror). Keep changes small, add tests where possible, and follow the included linting tools before committing.
 
