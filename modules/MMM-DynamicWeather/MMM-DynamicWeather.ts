@@ -153,15 +153,7 @@ Module.register("MMM-DynamicWeather", {
       Log.error("[MMM-DynamicWeather] No api_key provided. Set api_key in config or OPENWEATHERMAP_API_KEY in the environment.");
     }
 
-    this.url = this.hasApiKey ? "https://api.openweathermap.org/data/2.5/weather?appid=" + this.apiKey : "";
-
-    if (this.config.lat && this.config.lon) {
-      this.url += "&lat=" + this.config.lat + "&lon=" + this.config.lon;
-    }
-
-    if (this.config.locationID) {
-      this.url += "&id=" + this.config.locationID;
-    }
+    this.url = this.buildApiUrl(this.config.lat, this.config.lon, this.config.locationID);
 
     this.snowEffect = new Effect();
     this.snowEffect.images = ["snow1.png", "snow2.png", "snow3.png"];
@@ -227,6 +219,52 @@ Module.register("MMM-DynamicWeather", {
       this.weatherLoaded = true;
     }
     Log.info("[MMM-DynamicWeather] Finished initialization");
+  },
+  notificationReceived: function (notification: string, payload?: any) {
+    if (notification === "LOCATION_COORDINATES" && payload) {
+      const lat = Number(payload.lat ?? payload.latitude);
+      const lon = Number(payload.lon ?? payload.longitude);
+
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        this.updateCoordinates(lat, lon);
+      }
+    }
+  },
+  buildApiUrl: function (lat?: number, lon?: number, locationId?: number) {
+    if (!this.hasApiKey) {
+      return "";
+    }
+
+    let nextUrl = "https://api.openweathermap.org/data/2.5/weather?appid=" + this.apiKey;
+    const hasLat = typeof lat === "number" && !Number.isNaN(lat);
+    const hasLon = typeof lon === "number" && !Number.isNaN(lon);
+
+    if (hasLat && hasLon) {
+      nextUrl += "&lat=" + lat + "&lon=" + lon;
+    }
+
+    if (locationId) {
+      nextUrl += "&id=" + locationId;
+    }
+
+    return nextUrl;
+  },
+  updateCoordinates: function (lat: number, lon: number) {
+    this.config.lat = lat;
+    this.config.lon = lon;
+    this.config.locationID = 0;
+    this.url = this.buildApiUrl(lat, lon, 0);
+
+    if (!this.hasApiKey) {
+      return;
+    }
+
+    if (this.weatherTimeout) {
+      clearTimeout(this.weatherTimeout as ReturnType<typeof setTimeout>);
+      this.weatherTimeout = null;
+    }
+
+    this.getWeather(this);
   },
   buildBootPreviewQueue: function (): string[] {
     try {

@@ -38,9 +38,9 @@ Module.register("clock", {
 	getStyles () {
 		return ["clock_styles.css", "font-awesome.css"];
 	},
-	// Define start sequence.
-	start () {
-		Log.info(`Starting module: ${this.name}`);
+        // Define start sequence.
+        start () {
+                Log.info(`Starting module: ${this.name}`);
 
 		// Schedule update interval.
 		this.second = moment().second();
@@ -84,11 +84,23 @@ Module.register("clock", {
 		// reducedSeconds, so it will trigger when the minute changes
 		setTimeout(notificationTimer, delayCalculator(this.second));
 
-		// Set locale.
-		moment.locale(config.language);
-	},
-	// Override dom generator.
-	getDom () {
+                // Set locale.
+                moment.locale(config.language);
+        },
+        notificationReceived (notification, payload) {
+                if (notification === "LOCATION_COORDINATES" && payload) {
+                        const lat = Number(payload.lat ?? payload.latitude);
+                        const lon = Number(payload.lon ?? payload.longitude);
+
+                        if (Number.isFinite(lat) && Number.isFinite(lon)) {
+                                this.config.lat = lat;
+                                this.config.lon = lon;
+                                this.updateDom();
+                        }
+                }
+        },
+        // Override dom generator.
+        getDom () {
 		const wrapper = document.createElement("div");
 		wrapper.classList.add("clock-grid");
 

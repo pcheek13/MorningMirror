@@ -86,8 +86,8 @@ let config = {
         analogShowDate: "top",
         showSunTimes: false,
         showMoonTimes: false,
-        lat: 47.630539,
-        lon: -122.344147
+        lat: 0,
+        lon: 0
       }
     },
     {
@@ -135,6 +135,19 @@ let config = {
         showHumidity: true,
         showWind: true,
         allowLocationChange: true
+      }
+    },
+    {
+      module: "weather",
+      position: "top_right",
+      config: {
+        type: "current",
+        apiKey: openWeatherApiKey,
+        lat: 0,
+        lon: 0,
+        location: "",
+        weatherProvider: "openweathermap",
+        useCorsProxy: false
       }
     },
     {

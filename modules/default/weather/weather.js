@@ -113,16 +113,32 @@ Module.register("weather", {
 					}
 				}
 			}
-		} else if (notification === "INDOOR_TEMPERATURE") {
-			this.indoorTemperature = this.roundValue(payload);
-			this.updateDom(300);
-		} else if (notification === "INDOOR_HUMIDITY") {
-			this.indoorHumidity = this.roundValue(payload);
-			this.updateDom(300);
-		} else if (notification === "CURRENT_WEATHER_OVERRIDE" && this.config.allowOverrideNotification) {
-			this.weatherProvider.notificationReceived(payload);
-		}
-	},
+                } else if (notification === "INDOOR_TEMPERATURE") {
+                        this.indoorTemperature = this.roundValue(payload);
+                        this.updateDom(300);
+                } else if (notification === "INDOOR_HUMIDITY") {
+                        this.indoorHumidity = this.roundValue(payload);
+                        this.updateDom(300);
+                } else if (notification === "LOCATION_COORDINATES" && payload) {
+                        const lat = Number(payload.lat ?? payload.latitude);
+                        const lon = Number(payload.lon ?? payload.longitude);
+                        const locationName = payload.locationName || payload.location || this.config.location;
+
+                        if (Number.isFinite(lat) && Number.isFinite(lon)) {
+                                this.config.lat = lat;
+                                this.config.lon = lon;
+                                this.config.location = locationName;
+                                this.config.locationID = false;
+
+                                if (this.weatherProvider) {
+                                        this.weatherProvider.setConfig(this.config);
+                                        this.scheduleUpdate(0);
+                                }
+                        }
+                } else if (notification === "CURRENT_WEATHER_OVERRIDE" && this.config.allowOverrideNotification) {
+                        this.weatherProvider.notificationReceived(payload);
+                }
+        },
 
 	// Select the template depending on the display type.
 	getTemplate () {

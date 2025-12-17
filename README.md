@@ -81,6 +81,8 @@ MorningMirror ships with a curated set of node modules to mirror the original ex
 
 The default configuration keeps the clock in the top center, MMM-DailyWeatherPrompt in the top-left, the compliments module in the middle-center region, and MMM-DynamicWeather rendering full-screen weather effects. A new MMM-HamburgerMenu floats in the `bottom_right` region with a three-line toggle that opens a compact panel for touch-friendly controls (including the Wi‑Fi indicator and credential update form). Set your OpenWeatherMap API key in `MMM-DynamicWeather` and optionally prefill `location` for `MMM-DailyWeatherPrompt` if you do not want the on-screen prompt.
 
+When you enter a city/ZIP in the settings drawer, MMM-DailyWeatherPrompt geocodes it once and broadcasts the coordinates to every module listening for `LOCATION_COORDINATES`. The default build wires that signal into MMM-DynamicWeather (for animated backgrounds), the core `weather` module, and the clock so sunrise/sunset and the weather layers all stay in sync.
+
 Use the hamburger toggle to reveal shortcuts. The built-in settings gear broadcasts `OPEN_SETTINGS_PANEL` so any module listening for configuration updates can react, and the profile field lets you enter a name that saves locally and pushes `PROFILE_UPDATED` to the compliments module. Add more menu entries by extending `extraButtons` in the hamburger menu config without editing the module source.
 
 The settings drawer now includes an adjustable auto sleep timer (enter 0 to disable) plus a checkbox that controls whether the compliments module shows its brief wake greeting. Both values are persisted locally so they survive refreshes and keep their state unless you wipe the browser storage or reimage the Pi.
@@ -105,6 +107,21 @@ sudo chmod 440 /etc/sudoers.d/morningmirror-wifi
 ```
 
 The helper defaults to `wlan0`. If your Wi‑Fi interface uses a different name, export `WPA_INTERFACE` with the correct value before starting PM2 (for example, `export WPA_INTERFACE=wlan1` in your shell or systemd unit).
+
+To confirm `wpa_supplicant` applied the latest credentials and is still running, copy and paste this status check:
+
+```bash
+sudo systemctl status wpa_supplicant.service --no-pager && \
+  sudo wpa_cli -i "${WPA_INTERFACE:-wlan0}" status && \
+  sudo tail -n 20 /etc/wpa_supplicant/wpa_supplicant.conf
+```
+
+If you ever update the file by hand, force a reload without rebooting:
+
+```bash
+sudo wpa_cli -i "${WPA_INTERFACE:-wlan0}" reconfigure && \
+  sudo systemctl restart wpa_supplicant.service
+```
 
 ## Troubleshooting common install errors
 - **`node: bad option: --run` when running `npm start`**: Older Node releases on Raspberry Pi OS do not ship with the experimental `--run` flag. The start scripts now call Electron directly; pull the latest changes and rerun `npm ci --omit=dev`.
