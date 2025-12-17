@@ -1,20 +1,31 @@
-/* global Module */
+/* global Module, MM, Log */
 
 Module.register("MMM-HamburgerMenu", {
   defaults: {
-    menuLabel: "Menu",
     settingsLabel: "Settings",
     profilePlaceholder: "Enter your name",
     saveProfileLabel: "Save",
+    sleepLabel: "Sleep",
+    wakeLabel: "Wake",
+    wifiLabel: "Wi-Fi",
+    wifiSsidPlaceholder: "Network name (SSID)",
+    wifiPasswordPlaceholder: "Wi-Fi password",
+    wifiSaveLabel: "Update Wi-Fi",
     extraButtons: []
   },
 
   storageKey: "MMM-HamburgerMenu::profileName",
+  wifiStorageKey: "MMM-HamburgerMenu::wifiCredentials",
+  sleepLockString: "MMM-HamburgerMenu::sleep",
 
   start() {
-    this.isMenuOpen = false;
+    this.isSleeping = false;
     this.profileName = "";
+    this.wifiStatus = "";
+    this.wifiCredentials = { ssid: "", password: "" };
+
     this.loadProfileName();
+    this.loadWifiCredentials();
 
     if (this.profileName) {
       this.sendProfileUpdate();
@@ -44,9 +55,59 @@ Module.register("MMM-HamburgerMenu", {
     localStorage.setItem(this.storageKey, name);
   },
 
-  toggleMenu(open) {
-    this.isMenuOpen = typeof open === "boolean" ? open : !this.isMenuOpen;
+  loadWifiCredentials() {
+    if (typeof localStorage === "undefined") {
+      return;
+    }
+
+    const stored = localStorage.getItem(this.wifiStorageKey);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        this.wifiCredentials = {
+          ssid: parsed.ssid || "",
+          password: parsed.password || "",
+        };
+      } catch (error) {
+        Log.error("Failed to parse stored Wi-Fi credentials", error);
+      }
+    }
+  },
+
+  persistWifiCredentials(credentials) {
+    if (typeof localStorage === "undefined") {
+      return;
+    }
+
+    localStorage.setItem(this.wifiStorageKey, JSON.stringify(credentials));
+  },
+
+  toggleSleep() {
+    this.isSleeping = !this.isSleeping;
+    if (this.isSleeping) {
+      this.sleepScreen();
+    } else {
+      this.wakeScreen();
+    }
     this.updateDom();
+  },
+
+  sleepScreen() {
+    const modules = MM.getModules();
+    modules.enumerate((module) => {
+      if (module?.identifier !== this.identifier) {
+        module.hide(500, { lockString: this.sleepLockString });
+      }
+    });
+    this.sendNotification("MIRROR_SLEEP");
+  },
+
+  wakeScreen() {
+    const modules = MM.getModules();
+    modules.enumerate((module) => {
+      module.show(500, { lockString: this.sleepLockString });
+    });
+    this.sendNotification("MIRROR_WAKE");
   },
 
   sendProfileUpdate() {
@@ -58,6 +119,28 @@ Module.register("MMM-HamburgerMenu", {
     this.profileName = value;
     this.persistProfileName(this.profileName);
     this.sendProfileUpdate();
+    this.updateDom();
+  },
+
+  handleWifiSubmit(ssidInput, passwordInput) {
+    const ssid = (ssidInput?.value || "").trim();
+    const password = (passwordInput?.value || "").trim();
+
+    if (!ssid || !password) {
+      this.wifiStatus = "SSID and password required";
+      this.updateDom();
+      return;
+    }
+
+    this.wifiCredentials = { ssid, password };
+    this.wifiStatus = "Sending Wi-Fi update";
+    this.persistWifiCredentials(this.wifiCredentials);
+
+    this.sendNotification("WIFI_CREDENTIALS_UPDATED", {
+      ssid,
+      password,
+    });
+
     this.updateDom();
   },
 
@@ -108,7 +191,74 @@ Module.register("MMM-HamburgerMenu", {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       this.handleProfileSubmit(input);
-      this.toggleMenu(false);
+    });
+
+    return form;
+  },
+
+  renderSleepToggle() {
+    const button = document.createElement("button");
+    button.className = "mmm-hamburger-menu__action mmm-hamburger-menu__action--sleep";
+    if (this.isSleeping) {
+      button.classList.add("is-sleeping");
+    }
+    button.setAttribute("aria-pressed", String(this.isSleeping));
+    button.setAttribute("aria-label", this.config.sleepLabel);
+
+    const iconElement = document.createElement("i");
+    iconElement.className = this.isSleeping ? "fa fa-moon-o" : "fa fa-power-off";
+    button.appendChild(iconElement);
+
+    const text = document.createElement("span");
+    text.textContent = this.config.sleepLabel;
+    button.appendChild(text);
+
+    const state = document.createElement("small");
+    state.textContent = this.isSleeping ? this.config.wakeLabel : "On";
+    button.appendChild(state);
+
+    button.addEventListener("click", () => this.toggleSleep());
+
+    return button;
+  },
+
+  renderWifiForm() {
+    const form = document.createElement("form");
+    form.className = "mmm-hamburger-menu__wifi";
+
+    const label = document.createElement("div");
+    label.className = "mmm-hamburger-menu__section-title";
+    label.textContent = this.config.wifiLabel;
+    form.appendChild(label);
+
+    const ssid = document.createElement("input");
+    ssid.type = "text";
+    ssid.placeholder = this.config.wifiSsidPlaceholder;
+    ssid.value = this.wifiCredentials.ssid;
+    form.appendChild(ssid);
+
+    const password = document.createElement("input");
+    password.type = "password";
+    password.placeholder = this.config.wifiPasswordPlaceholder;
+    password.value = this.wifiCredentials.password;
+    form.appendChild(password);
+
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.className = "mmm-hamburger-menu__save";
+    submit.textContent = this.config.wifiSaveLabel;
+    form.appendChild(submit);
+
+    if (this.wifiStatus) {
+      const status = document.createElement("div");
+      status.className = "mmm-hamburger-menu__status";
+      status.textContent = this.wifiStatus;
+      form.appendChild(status);
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      this.handleWifiSubmit(ssid, password);
     });
 
     return form;
@@ -133,26 +283,17 @@ Module.register("MMM-HamburgerMenu", {
   getDom() {
     const wrapper = document.createElement("div");
     wrapper.className = "mmm-hamburger-menu";
-    if (this.isMenuOpen) {
-      wrapper.classList.add("open");
+    if (this.isSleeping) {
+      wrapper.classList.add("sleeping");
     }
 
-    const toggle = document.createElement("button");
-    toggle.className = "mmm-hamburger-menu__toggle";
-    toggle.setAttribute("aria-label", this.config.menuLabel);
-
-    const toggleIcon = document.createElement("i");
-    toggleIcon.className = "fa fa-bars";
-    toggle.appendChild(toggleIcon);
-
-    toggle.addEventListener("click", () => this.toggleMenu());
-    wrapper.appendChild(toggle);
-
-    const panel = document.createElement("div");
-    panel.className = "mmm-hamburger-menu__panel";
+    const bar = document.createElement("div");
+    bar.className = "mmm-hamburger-menu__bar";
 
     const actions = document.createElement("div");
     actions.className = "mmm-hamburger-menu__actions";
+
+    actions.appendChild(this.renderSleepToggle());
 
     const settingsButton = this.createActionButton(
       this.config.settingsLabel,
@@ -164,10 +305,11 @@ Module.register("MMM-HamburgerMenu", {
 
     this.renderExtraButtons(actions);
 
-    panel.appendChild(actions);
-    panel.appendChild(this.renderProfileInput());
+    bar.appendChild(actions);
+    bar.appendChild(this.renderWifiForm());
+    bar.appendChild(this.renderProfileInput());
 
-    wrapper.appendChild(panel);
+    wrapper.appendChild(bar);
 
     return wrapper;
   }
