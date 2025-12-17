@@ -176,63 +176,14 @@ let config = {
       }
     },
     {
-      module: "MMM-Modulebar",
-      position: "bottom_center",
+      module: "MMM-HamburgerMenu",
+      position: "bottom_right",
       config: {
-        sleepAfterMinutes: 20,
-        allowForce: true,
-        showBorder: true,
-        minWidth: "64px",
-        minHeight: "64px",
-        picturePlacement: "top",
-        direction: "row",
-        animationSpeed: 1000,
-        zindex: 1000,
-        visability: 0.75,
-        buttons: {
-          "1": {
-            module: "all",
-            text: "Wake",
-            text2: "Sleep",
-            symbol: "toggle-on",
-            symbol2: "toggle-off"
-          },
-          "2": {
-            module: "clock",
-            text: "Clock",
-            symbol: "clock",
-            symbol2: "clock-rotate-left"
-          },
-          "3": {
-            module: "MMM-DailyWeatherPrompt",
-            text: "Weather",
-            symbol: "cloud",
-            symbol2: "cloud-sun-rain"
-          },
-          "4": {
-            module: "MMM-WIFI",
-            text: "Wi-Fi",
-            symbol: "wifi",
-            symbol2: "wifi"
-          },
-          "5": {
-            module: "compliments",
-            text: "Greeting",
-            symbol: "smile",
-            symbol2: "face-smile-beam"
-          },
-          "6": {
-            module: "MMM-DynamicWeather",
-            text: "Effects",
-            symbol: "cloud-moon-rain",
-            symbol2: "cloud-showers-heavy"
-          }
-        },
-        settingsButton: {
-          module: "settings",
-          symbol: "cog",
-          text: "Settings"
-        }
+        menuLabel: "Menu",
+        settingsLabel: "Settings",
+        profilePlaceholder: "Enter your name",
+        saveProfileLabel: "Save",
+        extraButtons: []
       }
     }
   ]
