@@ -31,6 +31,8 @@ Then reference it inside `config/config.js`:
     locationLabel: "Daily weather location",
     locationPlaceholder: "City, ST or ZIP",
     locationSaveLabel: "Save location",
+    rebootLabel: "Reboot mirror",
+    rebootCommand: "sudo /sbin/reboot",
     extraButtons: []
   }
 }
@@ -42,6 +44,7 @@ Then reference it inside `config/config.js`:
 - Sleep button toggles the mirror display off/on while dispatching `MIRROR_SLEEP`/`MIRROR_WAKE` to interested modules.
 - Profile field saves locally and broadcasts `PROFILE_UPDATED` so compliments replace `{name}` placeholders with your saved name.
 - Module toggles for every default module (clock, weather, Wi-Fi, etc.) are saved locally so you can hide or re-enable modules with a tap.
-- Built-in on-screen keyboard keeps every input touch-friendly on kiosk builds.
+- Built-in on-screen keyboard keeps every input touch-friendly on kiosk builds, now with scroll padding so the active field stays above the keyboard.
 - The settings button hides itself while sleeping to leave only the half-moon wake control visible.
+- A reboot control lives inside the settings tray and calls the configurable `rebootCommand` (defaults to `sudo /sbin/reboot`).
 - `extraButtons` array still lets you add more menu actions without editing the module source.
