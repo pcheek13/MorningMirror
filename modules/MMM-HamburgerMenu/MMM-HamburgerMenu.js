@@ -55,6 +55,7 @@ Module.register("MMM-HamburgerMenu", {
       shift: false,
       activeKey: null,
       activeInput: null,
+      mode: "letters",
     };
     this.sleepTimeout = null;
 
@@ -387,15 +388,25 @@ Module.register("MMM-HamburgerMenu", {
     const names = new Set();
 
     modules.enumerate((module) => {
-      if (module?.identifier !== this.identifier && module?.name) {
-        names.add(module.name);
+      const moduleName = module?.name;
+      if (module?.identifier !== this.identifier && moduleName) {
+        if (moduleName.toLowerCase() === "compliments") {
+          return;
+        }
+
+        names.add(moduleName);
       }
     });
 
     if (names.size === 0 && window.config && Array.isArray(window.config.modules)) {
       window.config.modules.forEach((moduleConfig) => {
-        if (moduleConfig?.module && moduleConfig.module !== this.name) {
-          names.add(moduleConfig.module);
+        const moduleName = moduleConfig?.module;
+        if (moduleName && moduleName !== this.name) {
+          if (moduleName.toLowerCase() === "compliments") {
+            return;
+          }
+
+          names.add(moduleName);
         }
       });
     }
@@ -673,8 +684,11 @@ Module.register("MMM-HamburgerMenu", {
     heading.textContent = this.config.settingsLabel;
     panel.appendChild(heading);
 
+    const scrollable = document.createElement("div");
+    scrollable.className = "mmm-hamburger-menu__panel-content";
+
     if (this.availableModuleNames.length > 0) {
-      panel.appendChild(this.renderModuleToggles());
+      scrollable.appendChild(this.renderModuleToggles());
     }
 
     const forms = document.createElement("div");
@@ -685,7 +699,8 @@ Module.register("MMM-HamburgerMenu", {
     forms.appendChild(this.renderSleepForm());
     forms.appendChild(this.renderComplimentToggle());
 
-    panel.appendChild(forms);
+    scrollable.appendChild(forms);
+    panel.appendChild(scrollable);
 
     if (this.config.showVirtualKeyboard) {
       panel.appendChild(this.renderVirtualKeyboard());
@@ -704,9 +719,7 @@ Module.register("MMM-HamburgerMenu", {
     form.appendChild(label);
 
     const input = document.createElement("input");
-    input.type = "number";
-    input.min = "0";
-    input.step = "1";
+    input.type = "text";
     input.value = this.autoSleepMinutes;
     input.inputMode = "numeric";
     form.appendChild(input);
@@ -781,6 +794,17 @@ Module.register("MMM-HamburgerMenu", {
       return "Unknown";
     }
 
+    const lower = moduleName.toLowerCase();
+    const friendlyMap = {
+      "mmm-dailyweatherprompt": "Weather",
+      "mmm-dynamicweather": "Weather Effects",
+      updatenotification: "Updates",
+    };
+
+    if (friendlyMap[lower]) {
+      return friendlyMap[lower];
+    }
+
     const withoutPrefix = moduleName.replace(/^MMM-/, "");
     return withoutPrefix
       .split(/[-_]/)
@@ -835,17 +859,67 @@ Module.register("MMM-HamburgerMenu", {
       ? "flex"
       : "none";
 
-    const rows = [
-      ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "⌫"],
-      ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
-      ["a", "s", "d", "f", "g", "h", "j", "k", "l", "@"],
-      ["⇧", "z", "x", "c", "v", "b", "n", "m", "-", "_"],
-      ["space", "clear", "hide"],
-    ];
+    const modeSwitcher = document.createElement("div");
+    modeSwitcher.className = "mmm-hamburger-menu__keyboard-modes";
+
+    const letterButton = document.createElement("button");
+    letterButton.type = "button";
+    letterButton.textContent = "ABC";
+    letterButton.className = "mmm-hamburger-menu__keyboard-mode";
+    letterButton.addEventListener("click", () => {
+      this.virtualKeyboardState.mode = "letters";
+      this.virtualKeyboardState.shift = false;
+      this.updateDom();
+    });
+
+    const numberButton = document.createElement("button");
+    numberButton.type = "button";
+    numberButton.textContent = "123";
+    numberButton.className = "mmm-hamburger-menu__keyboard-mode";
+    numberButton.addEventListener("click", () => {
+      this.virtualKeyboardState.mode = "numbers";
+      this.virtualKeyboardState.shift = false;
+      this.updateDom();
+    });
+
+    const setModeButtonState = () => {
+      letterButton.classList.toggle(
+        "is-active",
+        this.virtualKeyboardState.mode === "letters"
+      );
+      numberButton.classList.toggle(
+        "is-active",
+        this.virtualKeyboardState.mode === "numbers"
+      );
+    };
+
+    setModeButtonState();
+    modeSwitcher.appendChild(letterButton);
+    modeSwitcher.appendChild(numberButton);
+    keyboardWrapper.appendChild(modeSwitcher);
+
+    const rows =
+      this.virtualKeyboardState.mode === "numbers"
+        ? [
+            ["1", "2", "3"],
+            ["4", "5", "6"],
+            ["7", "8", "9"],
+            ["0", "⌫", "clear"],
+            ["space", "hide"],
+          ]
+        : [
+            ["a", "b", "c", "d", "e", "f", "g", "h"],
+            ["i", "j", "k", "l", "m", "n", "o", "p"],
+            ["q", "r", "s", "t", "u", "v", "w", "x"],
+            ["y", "z", "@", "-", "_", ".", "⌫", "⇧"],
+            ["space", "clear", "hide"],
+          ];
 
     const keyButtons = [];
 
     const refreshLabels = () => {
+      setModeButtonState();
+
       keyButtons.forEach(({ button, key }) => {
         if (key === "space") {
           button.textContent = "Space";
