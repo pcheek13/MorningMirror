@@ -40,6 +40,7 @@ updateInterval: 30000,
 fadeSpeed: 4000,
 wakeDisplayDuration: 25000,
 profileName: "",
+showOnWake: true,
 morningStartTime: 3,
 morningEndTime: 12,
 afternoonStartTime: 12,
@@ -68,6 +69,7 @@ Log.info(`Starting module: ${this.name}`);
 this.lastComplimentIndex = -1;
 this.wakeTimer = null;
 this.profileName = this.config.profileName;
+this.showInitialCompliment = this.config.showOnWake !== false;
 
 if (this.config.remoteFile !== null) {
 const response = await this.loadComplimentFile();
@@ -108,7 +110,9 @@ this.updateDom(this.config.fadeSpeed);
 },
 minute_sync_delay);
 
+if (this.showInitialCompliment) {
 this.triggerWakeGreeting();
+}
 },
 
 	// check to see if this entry could be a cron entry wich contains spaces
@@ -368,7 +372,22 @@ return;
 }
 
 if (notification === "MIRROR_WAKE") {
+if (this.showInitialCompliment) {
 this.triggerWakeGreeting();
+}
+return;
+}
+
+if (notification === "COMPLIMENTS_INITIAL_VISIBILITY" && payload) {
+this.showInitialCompliment = payload.showOnWake !== false;
+if (!this.showInitialCompliment) {
+if (this.wakeTimer) {
+clearTimeout(this.wakeTimer);
+this.wakeTimer = null;
+}
+this.show(this.config.fadeSpeed);
+}
+return;
 }
 }
 });

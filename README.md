@@ -44,6 +44,7 @@ If `pm2 startup` prints a command, run it verbatim so systemd registers the serv
 - Electron-powered shell for kiosk-style full-screen operation.
 - Default modules preconfigured to work out of the box: MMM-DynamicWeather, MMM-DailyWeatherPrompt, MMM-WIFI, clock, alert, update notification, compliments, and a touch-friendly hamburger launcher in the bottom-right corner.
 - Compliments wake greeting that borrows your configured profile name and shows for 25 seconds when the mirror wakes.
+- Built-in auto sleep timer (15 minutes by default) and wake compliment toggle that are both adjustable from the on-screen settings and saved locally between sessions.
 - Development tooling (ESLint, Prettier, Jest, Stylelint) included for rapid module creation.
 
 ## Core dependencies
@@ -69,6 +70,8 @@ MorningMirror ships with a curated set of node modules to mirror the original ex
 The default configuration keeps the clock in the top center, MMM-DailyWeatherPrompt in the top-left, the lightweight MMM-WIFI indicator in the top-right, the compliments module in the middle-center region, and MMM-DynamicWeather rendering full-screen weather effects. A new MMM-HamburgerMenu floats in the `bottom_right` region with a three-line toggle that opens a compact panel for touch-friendly controls. Set your OpenWeatherMap API key in `MMM-DynamicWeather` and optionally prefill `location` for `MMM-DailyWeatherPrompt` if you do not want the on-screen prompt.
 
 Use the hamburger toggle to reveal shortcuts. The built-in settings gear broadcasts `OPEN_SETTINGS_PANEL` so any module listening for configuration updates can react, and the profile field lets you enter a name that saves locally and pushes `PROFILE_UPDATED` to the compliments module. Add more menu entries by extending `extraButtons` in the hamburger menu config without editing the module source.
+
+The settings drawer now includes an adjustable auto sleep timer (enter 0 to disable) plus a checkbox that controls whether the compliments module shows its brief wake greeting. Both values are persisted locally so they survive refreshes and keep their state unless you wipe the browser storage or reimage the Pi.
 
 The Wi-Fi indicator automatically appears for 30 seconds after boot or wake and stays visible whenever the connection is weak or missing, disappearing on its own once the link looks healthy.
 

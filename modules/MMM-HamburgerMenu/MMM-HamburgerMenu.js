@@ -7,6 +7,9 @@ Module.register("MMM-HamburgerMenu", {
     saveProfileLabel: "Save",
     sleepLabel: "Sleep",
     wakeLabel: "Wake",
+    sleepTimerLabel: "Auto sleep after (minutes)",
+    sleepTimerHelper: "Set to 0 to keep the mirror awake",
+    sleepSaveLabel: "Save sleep timer",
     wifiLabel: "Wi-Fi",
     wifiSsidPlaceholder: "Network name (SSID)",
     wifiPasswordPlaceholder: "Wi-Fi password",
@@ -14,12 +17,18 @@ Module.register("MMM-HamburgerMenu", {
     locationLabel: "Daily weather location",
     locationPlaceholder: "City, ST or ZIP",
     locationSaveLabel: "Save location",
+    complimentsToggleLabel: "Show compliments when waking",
+    complimentsToggleHelper: "Controls the initial wake greeting",
+    autoSleepMinutes: 15,
+    showComplimentsOnWake: true,
     extraButtons: []
   },
 
   storageKey: "MMM-HamburgerMenu::profileName",
   wifiStorageKey: "MMM-HamburgerMenu::wifiCredentials",
   locationStorageKey: "MMM-DailyWeatherPrompt::location",
+  autoSleepStorageKey: "MMM-HamburgerMenu::autoSleepMinutes",
+  complimentsToggleStorageKey: "MMM-HamburgerMenu::showComplimentsOnWake",
   sleepLockString: "MMM-HamburgerMenu::sleep",
 
   start() {
@@ -28,12 +37,19 @@ Module.register("MMM-HamburgerMenu", {
     this.profileName = "";
     this.wifiStatus = "";
     this.locationStatus = "";
+    this.sleepStatus = "";
+    this.complimentStatus = "";
     this.wifiCredentials = { ssid: "", password: "" };
     this.weatherLocation = "";
+    this.autoSleepMinutes = this.config.autoSleepMinutes;
+    this.showComplimentsOnWake = this.config.showComplimentsOnWake;
+    this.sleepTimeout = null;
 
     this.loadProfileName();
     this.loadWifiCredentials();
     this.loadWeatherLocation();
+    this.loadAutoSleepMinutes();
+    this.loadComplimentPreference();
 
     if (this.profileName) {
       this.sendProfileUpdate();
@@ -42,6 +58,10 @@ Module.register("MMM-HamburgerMenu", {
     if (this.weatherLocation) {
       this.sendLocationUpdate(this.weatherLocation);
     }
+
+    this.applyComplimentPreference();
+    this.resetSleepTimer();
+    this.registerActivityListeners();
   },
 
   getStyles() {
@@ -113,6 +133,91 @@ Module.register("MMM-HamburgerMenu", {
     localStorage.setItem(this.locationStorageKey, location);
   },
 
+  loadAutoSleepMinutes() {
+    if (typeof localStorage === "undefined") {
+      return;
+    }
+
+    const stored = localStorage.getItem(this.autoSleepStorageKey);
+    if (stored !== null) {
+      const parsed = Number.parseInt(stored, 10);
+      if (!Number.isNaN(parsed)) {
+        this.autoSleepMinutes = parsed;
+      }
+    }
+  },
+
+  persistAutoSleepMinutes(minutes) {
+    if (typeof localStorage === "undefined") {
+      return;
+    }
+
+    localStorage.setItem(this.autoSleepStorageKey, String(minutes));
+  },
+
+  loadComplimentPreference() {
+    if (typeof localStorage === "undefined") {
+      return;
+    }
+
+    const stored = localStorage.getItem(this.complimentsToggleStorageKey);
+    if (stored !== null) {
+      this.showComplimentsOnWake = stored === "true";
+    }
+  },
+
+  persistComplimentPreference(value) {
+    if (typeof localStorage === "undefined") {
+      return;
+    }
+
+    localStorage.setItem(this.complimentsToggleStorageKey, String(value));
+  },
+
+  clearSleepTimer() {
+    if (this.sleepTimeout) {
+      clearTimeout(this.sleepTimeout);
+      this.sleepTimeout = null;
+    }
+  },
+
+  resetSleepTimer() {
+    this.clearSleepTimer();
+
+    if (this.autoSleepMinutes > 0 && !this.isSleeping) {
+      this.sleepTimeout = setTimeout(
+        () => this.triggerAutoSleep(),
+        this.autoSleepMinutes * 60 * 1000
+      );
+    }
+  },
+
+  triggerAutoSleep() {
+    this.isSleeping = true;
+    this.sleepScreen();
+    this.updateDom();
+  },
+
+  registerActivityListeners() {
+    const handler = () => {
+      if (!this.isSleeping) {
+        this.resetSleepTimer();
+      }
+    };
+
+    ["mousemove", "touchstart", "keydown"].forEach((eventName) => {
+      window.addEventListener(eventName, handler, { passive: true });
+    });
+
+    this.activityHandler = handler;
+  },
+
+  applyComplimentPreference() {
+    this.sendNotification("COMPLIMENTS_INITIAL_VISIBILITY", {
+      showOnWake: this.showComplimentsOnWake,
+    });
+  },
+
   toggleSleep() {
     this.isSleeping = !this.isSleeping;
     if (this.isSleeping) {
@@ -124,6 +229,7 @@ Module.register("MMM-HamburgerMenu", {
   },
 
   sleepScreen() {
+    this.clearSleepTimer();
     const modules = MM.getModules();
     modules.enumerate((module) => {
       if (module?.identifier !== this.identifier) {
@@ -134,6 +240,7 @@ Module.register("MMM-HamburgerMenu", {
   },
 
   wakeScreen() {
+    this.resetSleepTimer();
     const modules = MM.getModules();
     modules.enumerate((module) => {
       module.show(500, { lockString: this.sleepLockString });
@@ -194,6 +301,33 @@ Module.register("MMM-HamburgerMenu", {
 
   sendLocationUpdate(location) {
     this.sendNotification("LOCATION_UPDATED", { location });
+  },
+
+  handleSleepSubmit(input) {
+    const minutes = Number.parseInt((input?.value || "").trim(), 10);
+
+    if (Number.isNaN(minutes) || minutes < 0) {
+      this.sleepStatus = "Enter 0 or a positive number";
+      this.updateDom();
+      return;
+    }
+
+    this.autoSleepMinutes = minutes;
+    this.persistAutoSleepMinutes(minutes);
+    this.sleepStatus = minutes === 0 ? "Auto sleep disabled" : `Sleeping after ${minutes} minutes`;
+    this.resetSleepTimer();
+    this.updateDom();
+  },
+
+  handleComplimentToggle(input) {
+    const isChecked = Boolean(input?.checked);
+    this.showComplimentsOnWake = isChecked;
+    this.persistComplimentPreference(isChecked);
+    this.complimentStatus = isChecked
+      ? "Compliments show at wake"
+      : "Compliments stay visible without wake greeting";
+    this.applyComplimentPreference();
+    this.updateDom();
   },
 
   createActionButton(label, icon, action, payload = {}, options = {}) {
@@ -398,10 +532,92 @@ Module.register("MMM-HamburgerMenu", {
     forms.appendChild(this.renderProfileInput());
     forms.appendChild(this.renderWifiForm());
     forms.appendChild(this.renderLocationForm());
+    forms.appendChild(this.renderSleepForm());
+    forms.appendChild(this.renderComplimentToggle());
 
     panel.appendChild(forms);
 
     return panel;
+  },
+
+  renderSleepForm() {
+    const form = document.createElement("form");
+    form.className = "mmm-hamburger-menu__sleep";
+
+    const label = document.createElement("div");
+    label.className = "mmm-hamburger-menu__section-title";
+    label.textContent = this.config.sleepTimerLabel;
+    form.appendChild(label);
+
+    const input = document.createElement("input");
+    input.type = "number";
+    input.min = "0";
+    input.step = "1";
+    input.value = this.autoSleepMinutes;
+    input.inputMode = "numeric";
+    form.appendChild(input);
+
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.className = "mmm-hamburger-menu__save";
+    submit.textContent = this.config.sleepSaveLabel;
+    form.appendChild(submit);
+
+    const helper = document.createElement("div");
+    helper.className = "mmm-hamburger-menu__helper";
+    helper.textContent = this.config.sleepTimerHelper;
+    form.appendChild(helper);
+
+    if (this.sleepStatus) {
+      const status = document.createElement("div");
+      status.className = "mmm-hamburger-menu__status";
+      status.textContent = this.sleepStatus;
+      form.appendChild(status);
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      this.handleSleepSubmit(input);
+    });
+
+    return form;
+  },
+
+  renderComplimentToggle() {
+    const form = document.createElement("form");
+    form.className = "mmm-hamburger-menu__compliments";
+
+    const label = document.createElement("div");
+    label.className = "mmm-hamburger-menu__section-title";
+    label.textContent = this.config.complimentsToggleLabel;
+    form.appendChild(label);
+
+    const toggleWrapper = document.createElement("label");
+    toggleWrapper.className = "mmm-hamburger-menu__toggle";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = this.showComplimentsOnWake;
+    toggleWrapper.appendChild(input);
+
+    const span = document.createElement("span");
+    span.textContent = this.config.complimentsToggleHelper;
+    toggleWrapper.appendChild(span);
+
+    form.appendChild(toggleWrapper);
+
+    if (this.complimentStatus) {
+      const status = document.createElement("div");
+      status.className = "mmm-hamburger-menu__status";
+      status.textContent = this.complimentStatus;
+      form.appendChild(status);
+    }
+
+    form.addEventListener("change", () => {
+      this.handleComplimentToggle(input);
+    });
+
+    return form;
   },
 
   getDom() {

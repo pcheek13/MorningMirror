@@ -170,7 +170,8 @@ let config = {
       position: "middle_center",
       config: {
         wakeDisplayDuration: 25000,
-        profileName: ""
+        profileName: "",
+        showOnWake: true
       }
     },
     {
@@ -182,6 +183,9 @@ let config = {
         saveProfileLabel: "Save",
         sleepLabel: "Sleep",
         wakeLabel: "Wake",
+        sleepTimerLabel: "Auto sleep after (minutes)",
+        sleepTimerHelper: "Set to 0 to keep the mirror awake",
+        sleepSaveLabel: "Save sleep timer",
         wifiLabel: "Wi-Fi",
         wifiSsidPlaceholder: "Network name (SSID)",
         wifiPasswordPlaceholder: "Wi-Fi password",
@@ -189,6 +193,10 @@ let config = {
         locationLabel: "Daily weather location",
         locationPlaceholder: "City, ST or ZIP",
         locationSaveLabel: "Save location",
+        complimentsToggleLabel: "Show compliments when waking",
+        complimentsToggleHelper: "Controls the initial wake greeting",
+        autoSleepMinutes: 15,
+        showComplimentsOnWake: true,
         extraButtons: []
       }
     }

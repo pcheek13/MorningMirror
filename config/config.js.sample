@@ -172,7 +172,8 @@ let config = {
       position: "middle_center",
       config: {
         wakeDisplayDuration: 25000,
-        profileName: ""
+        profileName: "",
+        showOnWake: true
       }
     },
     {
@@ -183,6 +184,15 @@ let config = {
         settingsLabel: "Settings",
         profilePlaceholder: "Enter your name",
         saveProfileLabel: "Save",
+        sleepLabel: "Sleep",
+        wakeLabel: "Wake",
+        sleepTimerLabel: "Auto sleep after (minutes)",
+        sleepTimerHelper: "Set to 0 to keep the mirror awake",
+        sleepSaveLabel: "Save sleep timer",
+        complimentsToggleLabel: "Show compliments when waking",
+        complimentsToggleHelper: "Controls the initial wake greeting",
+        autoSleepMinutes: 15,
+        showComplimentsOnWake: true,
         extraButtons: []
       }
     }
