@@ -32,6 +32,10 @@
   align-items: center;
 }
 
+.mmm-hamburger-menu.sleeping .mmm-hamburger-menu__actions {
+  justify-content: flex-end;
+}
+
 .mmm-hamburger-menu__action {
   flex: 0 0 auto;
   min-width: 48px;
@@ -162,6 +166,71 @@
   width: 18px;
   height: 18px;
   accent-color: #ffffff;
+}
+
+.mmm-hamburger-menu__modules {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+
+.mmm-hamburger-menu__modules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mmm-hamburger-menu__module-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-bright, #fff);
+  font-size: 0.95rem;
+}
+
+.mmm-hamburger-menu__module-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #ffffff;
+}
+
+.mmm-hamburger-menu__keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}
+
+.mmm-hamburger-menu__keyboard-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mmm-hamburger-menu__keyboard-key {
+  min-width: 38px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.mmm-hamburger-menu__keyboard-key:hover,
+.mmm-hamburger-menu__keyboard-key:focus {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
 }
 
 .mmm-hamburger-menu__sr-only {
