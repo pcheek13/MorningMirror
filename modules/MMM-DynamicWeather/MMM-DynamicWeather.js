@@ -92,6 +92,17 @@ Module.register("MMM-DynamicWeather", {
         sequential: "",
         sunImage: "sun_right",
         effects: [],
+        bootPreviewInterval: 4000,
+        bootPreviewOptions: [
+            "snow",
+            "rain",
+            "cloudy",
+            "sun",
+            "moon",
+            "fog",
+            "lightning",
+        ],
+        showBootSpinner: true,
     },
     start: function () {
         var _this_1 = this;
@@ -104,6 +115,10 @@ Module.register("MMM-DynamicWeather", {
         this.hasDateEffectsToDisplay = false;
         this.hasHolidayEffectsToDisplay = false;
         this.hasWeatherEffectsToDisplay = true;
+        this.bootPreviewActive = true;
+        this.bootPreviewIndex = 0;
+        this.bootPreviewQueue = [];
+        this.bootPreviewTimer = null;
         this.effectDurationTimeout = null;
         this.effectDelayTimeout = null;
         this.weatherTimeout = null;
@@ -157,6 +172,13 @@ Module.register("MMM-DynamicWeather", {
         else {
             this.lastSequential = "";
         }
+        this.bootPreviewQueue = this.buildBootPreviewQueue();
+        if (this.bootPreviewQueue.length === 0) {
+            this.bootPreviewActive = false;
+        }
+        else {
+            this.scheduleBootPreview(true);
+        }
         this.checkDates();
         if (this.allHolidays.length > 0) {
             this.getHolidays(this);
@@ -174,6 +196,129 @@ Module.register("MMM-DynamicWeather", {
             this.weatherLoaded = true;
         }
         Log.info("[MMM-DynamicWeather] Finished initialization");
+    },
+    buildBootPreviewQueue: function () {
+        var _this_1 = this;
+        try {
+            var options = Array.isArray(this.config.bootPreviewOptions)
+                ? this.config.bootPreviewOptions
+                : [];
+            var unique_1 = new Set();
+            var allowed = [];
+            var canShow = function (option) {
+                if (option === "snow") {
+                    return _this_1.config.hideSnow !== true;
+                }
+                if (option === "rain") {
+                    return _this_1.config.hideRain !== true;
+                }
+                if (option === "cloudy") {
+                    return _this_1.config.hideClouds !== true;
+                }
+                if (option === "fog") {
+                    return _this_1.config.hideFog !== true;
+                }
+                if (option === "lightning") {
+                    return _this_1.config.hideLightning !== true;
+                }
+                return true;
+            };
+            options.forEach(function (entry) {
+                var option = String(entry || "").toLowerCase();
+                if (!option || unique_1.has(option) || !canShow(option)) {
+                    return;
+                }
+                unique_1.add(option);
+                allowed.push(option);
+            });
+            return allowed;
+        }
+        catch (error) {
+            console.error("[MMM-DynamicWeather] Error building boot preview queue", error);
+            return [];
+        }
+    },
+    scheduleBootPreview: function (initial) {
+        var _this_1 = this;
+        if (initial === void 0) { initial = false; }
+        if (!this.bootPreviewActive || this.bootPreviewQueue.length === 0) {
+            this.finishBootPreview();
+            return;
+        }
+        if (!initial) {
+            this.bootPreviewIndex += 1;
+        }
+        if (this.bootPreviewIndex >= this.bootPreviewQueue.length) {
+            this.finishBootPreview();
+            return;
+        }
+        clearTimeout(this.bootPreviewTimer);
+        this.updateDom();
+        this.bootPreviewTimer = setTimeout(function () {
+            _this_1.scheduleBootPreview(false);
+        }, this.config.bootPreviewInterval);
+    },
+    finishBootPreview: function () {
+        this.bootPreviewActive = false;
+        this.bootPreviewIndex = 0;
+        clearTimeout(this.bootPreviewTimer);
+        this.bootPreviewTimer = null;
+        this.doShowEffects = true;
+        this.updateDom();
+    },
+    renderBootSpinner: function () {
+        var overlay = document.createElement("div");
+        overlay.className = "mmm-dynamic-weather__boot-spinner";
+        var spinner = document.createElement("div");
+        spinner.className = "mmm-dynamic-weather__boot-spinner-circle";
+        overlay.appendChild(spinner);
+        return overlay;
+    },
+    renderBootPreviewEffect: function (wrapper, effectName) {
+        switch (effectName) {
+            case "snow": {
+                this.showCustomEffect(wrapper, this.snowEffect);
+                if (this.config.hideSnowman === false || this.config.hideSnowman === "false") {
+                    this.buildSnowman(wrapper);
+                }
+                break;
+            }
+            case "rain": {
+                this.makeItRain(wrapper);
+                if (this.config.hideFlower === false || this.config.hideFlower === "false") {
+                    this.buildFlower(wrapper);
+                }
+                break;
+            }
+            case "cloudy": {
+                if (this.config.realisticClouds) {
+                    this.showCustomEffect(wrapper, this.realisticCloudsEffect);
+                }
+                else {
+                    this.makeItCloudy(wrapper);
+                }
+                break;
+            }
+            case "sun": {
+                this.makeItSunny(wrapper);
+                break;
+            }
+            case "moon": {
+                this.makeItMoon(wrapper);
+                break;
+            }
+            case "fog": {
+                this.makeItFoggy(wrapper);
+                break;
+            }
+            case "lightning": {
+                this.makeItLightning(wrapper);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
     },
     getStyles: function () {
         return ["MMM-DynamicWeather.css"];
@@ -285,6 +430,14 @@ Module.register("MMM-DynamicWeather", {
         wrapper.style.opacity = this.config.opacity;
         wrapper.className = "wrapper";
         try {
+            if (this.bootPreviewActive && this.bootPreviewQueue.length > 0) {
+                var previewEffect = this.bootPreviewQueue[this.bootPreviewIndex] || this.bootPreviewQueue[0];
+                this.renderBootPreviewEffect(wrapper, previewEffect);
+                if (this.config.showBootSpinner) {
+                    wrapper.appendChild(this.renderBootSpinner());
+                }
+                return wrapper;
+            }
             //setup the fade-out animation
             var fadeDuration = parseInt(this.config.fadeDuration);
             var animationDelay = parseInt(this.config.effectDuration) - fadeDuration;

@@ -5,6 +5,38 @@
   animation-iteration-count: infinite;
 }
 
+.mmm-dynamic-weather__boot-spinner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.mmm-dynamic-weather__boot-spinner-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 6px solid rgba(255, 255, 255, 0.25);
+  border-top-color: rgba(255, 255, 255, 0.9);
+  animation: mmm-dynamic-weather-spin 0.9s linear infinite;
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.35);
+}
+
+@keyframes mmm-dynamic-weather-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .MMM-DynamicWeather .flake-upwards {
   position: absolute;
   top: -50px;
