@@ -70,6 +70,10 @@ Module.register("MMM-Modulebar", {
   },
 
   start() {
+    if (typeof this.config.visibility === "number" && typeof this.config.visability === "undefined") {
+      this.config.visability = this.config.visibility;
+    }
+
     this.modulesHidden = false;
     this.sleepTimer = null;
     this.overlay = null;
@@ -89,17 +93,22 @@ Module.register("MMM-Modulebar", {
 
   // Define required styles.
   getStyles() {
-    return ["/css/font-awesome.css", "MMM-Modulebar.css"];
+    return ["font-awesome.css", this.file("MMM-Modulebar.css")];
   },
 
   // Override dom generator.
   getDom() {
     const container = document.createElement("div");
-    container.className = "modulebar-container";
+    container.className = "modulebar";
 
     const overlay = document.createElement("div");
     overlay.className = "paint-it-black";
     overlay.style.transitionDuration = `${this.config.animationSpeed}ms`;
+    overlay.addEventListener("click", () => {
+      if (this.modulesHidden) {
+        this.showAllModules(this.allButtonVisuals);
+      }
+    });
     this.overlay = overlay;
 
     const menu = document.createElement("span");
@@ -107,12 +116,30 @@ Module.register("MMM-Modulebar", {
     menu.id = `${this.identifier}_menu`;
     menu.style.flexDirection = this.config.direction;
 
-    for (const num in this.config.buttons) {
-      menu.appendChild(this.createButton(this, num, this.config.buttons[num], this.config.picturePlacement, overlay));
-    }
+    const sortedButtons = Object.keys(this.config.buttons).sort((a, b) => Number(a) - Number(b));
+    const regularButtons = [];
+    const toggleButtons = [];
+
+    sortedButtons.forEach((num) => {
+      const data = this.config.buttons[num];
+      const moduleName = typeof data.module === "string" ? data.module.toLowerCase() : "";
+      if (moduleName === "all") {
+        toggleButtons.push({ num, data });
+      } else {
+        regularButtons.push({ num, data });
+      }
+    });
+
+    const appendButton = ({ num, data }) => {
+      menu.appendChild(this.createButton(this, num, data, this.config.picturePlacement, overlay));
+    };
+
+    regularButtons.forEach(appendButton);
 
     const settingsButton = Object.assign({ module: "settings" }, this.config.settingsButton);
     menu.appendChild(this.createButton(this, "settings", settingsButton, this.config.picturePlacement, overlay));
+
+    toggleButtons.forEach(appendButton);
 
     menu.appendChild(overlay);
     container.appendChild(menu);
@@ -270,8 +297,14 @@ Module.register("MMM-Modulebar", {
     const item = document.createElement("span");
     item.id = `${self.identifier}_button_${num}`;
     item.className = "modulebar-button";
+    item.setAttribute("role", "button");
+    item.setAttribute("tabindex", "0");
 
     const modules = MM.getModules();
+
+    item.style.minWidth = self.config.minWidth;
+    item.style.minHeight = self.config.minHeight;
+    item.style.transition = `opacity ${self.config.animationSpeed}ms ease`;
 
     const setOverlayVisible = function (show) {
       overlay.classList.toggle("visible", show);
@@ -308,9 +341,6 @@ Module.register("MMM-Modulebar", {
       faclassName = "modulebar-picture ";
     } else {
       faclassName = "modulebar-picture fas fa-";
-      item.style.minWidth = self.config.minWidth;
-      item.style.minHeight = self.config.minHeight;
-      item.style.transition = `opacity ${self.config.animationSpeed}ms ease`;
     }
 
     const handleToggle = () => {
@@ -399,8 +429,13 @@ Module.register("MMM-Modulebar", {
         }
       }
     };
-
     item.addEventListener("click", handleToggle);
+    item.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleToggle();
+      }
+    });
 
     item.style.flexDirection = {
       right: "row-reverse",
