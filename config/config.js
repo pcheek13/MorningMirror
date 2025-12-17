@@ -131,11 +131,9 @@ let config = {
         location: "",
         units: "imperial",
         updateInterval: 10 * 60 * 1000,
-        promptText: "Enter City, ST or ZIP",
         showFeelsLike: true,
         showHumidity: true,
-        showWind: true,
-        allowLocationChange: true
+        showWind: true
       }
     },
     {
@@ -179,10 +177,18 @@ let config = {
       module: "MMM-HamburgerMenu",
       position: "bottom_right",
       config: {
-        menuLabel: "Menu",
         settingsLabel: "Settings",
         profilePlaceholder: "Enter your name",
         saveProfileLabel: "Save",
+        sleepLabel: "Sleep",
+        wakeLabel: "Wake",
+        wifiLabel: "Wi-Fi",
+        wifiSsidPlaceholder: "Network name (SSID)",
+        wifiPasswordPlaceholder: "Wi-Fi password",
+        wifiSaveLabel: "Update Wi-Fi",
+        locationLabel: "Daily weather location",
+        locationPlaceholder: "City, ST or ZIP",
+        locationSaveLabel: "Save location",
         extraButtons: []
       }
     }

@@ -1,16 +1,14 @@
 # MMM-DailyWeatherPrompt
 
-MorningMirror module that displays **today’s weather** and allows you to **set or change the weather location directly on the mirror**. If no location is configured, the module renders a simple on-screen prompt (city/state or ZIP). The chosen location is saved locally and reused on reboot.
+MorningMirror module that displays **today’s weather** using the location saved in the MMM-HamburgerMenu settings tray. The chosen city/state or ZIP lives in `localStorage` so the forecast stays in sync after a reboot.
 
 ## Features
 
-- On-screen location prompt (no config edit required)
-- Touch keypad with ZIP entry and letter toggle for city names
+- Location edited in the MMM-HamburgerMenu settings tray (no on-screen keypad clutter)
 - Accepts **City, ST** or **ZIP code**
 - Daily weather summary (current, high, low) plus a 5-day outlook
 - Feels-like temperature, humidity, and wind
 - Persistent storage via `localStorage`
-- Edit location anytime with a small gear button along the bottom of the module
 - Clean, mirror-friendly UI
 
 ## One-line install (copy/paste)
@@ -35,27 +33,22 @@ Add the module to your `config.js`:
   config: {
     units: "imperial", // or "metric"
     updateInterval: 10 * 60 * 1000, // 10 minutes
-    promptText: "Enter City, ST or ZIP",
     showFeelsLike: true,
     showHumidity: true,
-    showWind: true,
-    allowLocationChange: true
+    showWind: true
   }
 }
 ```
 
 ### Notes
 - The module uses the free [Open-Meteo](https://open-meteo.com/) APIs (geocoding + current forecast). No API key required.
-- If `config.location` is empty, the module will prompt on-screen. The chosen value is saved to `localStorage` on the client.
+- Set or change the location in the MMM-HamburgerMenu settings tray; the module listens for `LOCATION_UPDATED` and refreshes automatically.
 - `units` follows Open-Meteo options: `imperial` for °F/mph, `metric` for °C/km/h.
 
 ## Interaction
 
-1. On first load (no location configured), the module displays an input prompt.
-2. Enter `City, ST` or a ZIP/postal code and click **Save** (or press **Enter**).
-3. Use the on-screen keypad: **ZIP** mode defaults to numbers, and the **Letters** toggle switches to city input. You can still type with a physical keyboard.
-4. Click **Save** to fetch weather data (current temp, summary, high/low, feels-like, humidity, wind, and the last updated time) plus a 5-day forecast.
-5. Tap the gear at the bottom of the module to re-open the location prompt and save a new city/ZIP whenever you move your mirror.
+1. Open the MMM-HamburgerMenu settings tray (bottom-right gear) and enter `City, ST` or a ZIP/postal code.
+2. The module receives the `LOCATION_UPDATED` notification, saves the value locally, and fetches weather data (current temp, summary, high/low, feels-like, humidity, wind, and the last updated time) plus a 5-day forecast.
 
 ## File overview
 

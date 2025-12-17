@@ -11,24 +11,36 @@ Module.register("MMM-HamburgerMenu", {
     wifiSsidPlaceholder: "Network name (SSID)",
     wifiPasswordPlaceholder: "Wi-Fi password",
     wifiSaveLabel: "Update Wi-Fi",
+    locationLabel: "Daily weather location",
+    locationPlaceholder: "City, ST or ZIP",
+    locationSaveLabel: "Save location",
     extraButtons: []
   },
 
   storageKey: "MMM-HamburgerMenu::profileName",
   wifiStorageKey: "MMM-HamburgerMenu::wifiCredentials",
+  locationStorageKey: "MMM-DailyWeatherPrompt::location",
   sleepLockString: "MMM-HamburgerMenu::sleep",
 
   start() {
     this.isSleeping = false;
+    this.isSettingsOpen = false;
     this.profileName = "";
     this.wifiStatus = "";
+    this.locationStatus = "";
     this.wifiCredentials = { ssid: "", password: "" };
+    this.weatherLocation = "";
 
     this.loadProfileName();
     this.loadWifiCredentials();
+    this.loadWeatherLocation();
 
     if (this.profileName) {
       this.sendProfileUpdate();
+    }
+
+    if (this.weatherLocation) {
+      this.sendLocationUpdate(this.weatherLocation);
     }
   },
 
@@ -80,6 +92,25 @@ Module.register("MMM-HamburgerMenu", {
     }
 
     localStorage.setItem(this.wifiStorageKey, JSON.stringify(credentials));
+  },
+
+  loadWeatherLocation() {
+    if (typeof localStorage === "undefined") {
+      return;
+    }
+
+    const stored = localStorage.getItem(this.locationStorageKey);
+    if (stored) {
+      this.weatherLocation = stored;
+    }
+  },
+
+  persistWeatherLocation(location) {
+    if (typeof localStorage === "undefined") {
+      return;
+    }
+
+    localStorage.setItem(this.locationStorageKey, location);
   },
 
   toggleSleep() {
@@ -141,12 +172,34 @@ Module.register("MMM-HamburgerMenu", {
       password,
     });
 
+    this.wifiStatus = "Wi-Fi update sent";
     this.updateDom();
   },
 
-  createActionButton(label, icon, notification, payload = {}) {
+  handleLocationSubmit(input) {
+    const location = (input?.value || "").trim();
+
+    if (!location) {
+      this.locationStatus = "Enter a city, state, or ZIP";
+      this.updateDom();
+      return;
+    }
+
+    this.weatherLocation = location;
+    this.persistWeatherLocation(location);
+    this.sendLocationUpdate(location);
+    this.locationStatus = "Location saved";
+    this.updateDom();
+  },
+
+  sendLocationUpdate(location) {
+    this.sendNotification("LOCATION_UPDATED", { location });
+  },
+
+  createActionButton(label, icon, action, payload = {}, options = {}) {
     const button = document.createElement("button");
     button.className = "mmm-hamburger-menu__action";
+    button.setAttribute("aria-label", label);
 
     const iconElement = document.createElement("i");
     iconElement.className = `fa fa-${icon}`;
@@ -154,11 +207,16 @@ Module.register("MMM-HamburgerMenu", {
 
     const text = document.createElement("span");
     text.textContent = label;
+    if (options.showLabel === false) {
+      text.className = "mmm-hamburger-menu__sr-only";
+    }
     button.appendChild(text);
 
     button.addEventListener("click", () => {
-      if (notification) {
-        this.sendNotification(notification, payload);
+      if (typeof action === "function") {
+        action();
+      } else if (action) {
+        this.sendNotification(action, payload);
       }
     });
 
@@ -197,27 +255,37 @@ Module.register("MMM-HamburgerMenu", {
   },
 
   renderSleepToggle() {
-    const button = document.createElement("button");
-    button.className = "mmm-hamburger-menu__action mmm-hamburger-menu__action--sleep";
+    const button = this.createActionButton(
+      this.config.sleepLabel,
+      this.isSleeping ? "moon-o" : "power-off",
+      () => this.toggleSleep(),
+      {},
+      { showLabel: false }
+    );
+
+    button.classList.add("mmm-hamburger-menu__action--sleep");
     if (this.isSleeping) {
       button.classList.add("is-sleeping");
     }
     button.setAttribute("aria-pressed", String(this.isSleeping));
-    button.setAttribute("aria-label", this.config.sleepLabel);
 
-    const iconElement = document.createElement("i");
-    iconElement.className = this.isSleeping ? "fa fa-moon-o" : "fa fa-power-off";
-    button.appendChild(iconElement);
+    return button;
+  },
 
-    const text = document.createElement("span");
-    text.textContent = this.config.sleepLabel;
-    button.appendChild(text);
+  renderSettingsToggle() {
+    const button = this.createActionButton(
+      this.config.settingsLabel,
+      "cog",
+      () => {
+        this.isSettingsOpen = !this.isSettingsOpen;
+        this.updateDom();
+      },
+      {},
+      { showLabel: false }
+    );
 
-    const state = document.createElement("small");
-    state.textContent = this.isSleeping ? this.config.wakeLabel : "On";
-    button.appendChild(state);
-
-    button.addEventListener("click", () => this.toggleSleep());
+    button.classList.add("mmm-hamburger-menu__action--settings");
+    button.setAttribute("aria-pressed", String(this.isSettingsOpen));
 
     return button;
   },
@@ -264,6 +332,42 @@ Module.register("MMM-HamburgerMenu", {
     return form;
   },
 
+  renderLocationForm() {
+    const form = document.createElement("form");
+    form.className = "mmm-hamburger-menu__location";
+
+    const label = document.createElement("div");
+    label.className = "mmm-hamburger-menu__section-title";
+    label.textContent = this.config.locationLabel;
+    form.appendChild(label);
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = this.config.locationPlaceholder;
+    input.value = this.weatherLocation;
+    form.appendChild(input);
+
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.className = "mmm-hamburger-menu__save";
+    submit.textContent = this.config.locationSaveLabel;
+    form.appendChild(submit);
+
+    if (this.locationStatus) {
+      const status = document.createElement("div");
+      status.className = "mmm-hamburger-menu__status";
+      status.textContent = this.locationStatus;
+      form.appendChild(status);
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      this.handleLocationSubmit(input);
+    });
+
+    return form;
+  },
+
   renderExtraButtons(container) {
     if (!Array.isArray(this.config.extraButtons)) {
       return;
@@ -280,11 +384,34 @@ Module.register("MMM-HamburgerMenu", {
     });
   },
 
+  renderSettingsPanel() {
+    const panel = document.createElement("div");
+    panel.className = "mmm-hamburger-menu__panel";
+
+    const heading = document.createElement("div");
+    heading.className = "mmm-hamburger-menu__panel-title";
+    heading.textContent = this.config.settingsLabel;
+    panel.appendChild(heading);
+
+    const forms = document.createElement("div");
+    forms.className = "mmm-hamburger-menu__forms";
+    forms.appendChild(this.renderProfileInput());
+    forms.appendChild(this.renderWifiForm());
+    forms.appendChild(this.renderLocationForm());
+
+    panel.appendChild(forms);
+
+    return panel;
+  },
+
   getDom() {
     const wrapper = document.createElement("div");
     wrapper.className = "mmm-hamburger-menu";
     if (this.isSleeping) {
       wrapper.classList.add("sleeping");
+    }
+    if (this.isSettingsOpen) {
+      wrapper.classList.add("settings-open");
     }
 
     const bar = document.createElement("div");
@@ -295,19 +422,16 @@ Module.register("MMM-HamburgerMenu", {
 
     actions.appendChild(this.renderSleepToggle());
 
-    const settingsButton = this.createActionButton(
-      this.config.settingsLabel,
-      "cog",
-      "OPEN_SETTINGS_PANEL"
-    );
-    settingsButton.classList.add("mmm-hamburger-menu__action--settings");
+    const settingsButton = this.renderSettingsToggle();
     actions.appendChild(settingsButton);
 
     this.renderExtraButtons(actions);
 
+    if (this.isSettingsOpen) {
+      wrapper.appendChild(this.renderSettingsPanel());
+    }
+
     bar.appendChild(actions);
-    bar.appendChild(this.renderWifiForm());
-    bar.appendChild(this.renderProfileInput());
 
     wrapper.appendChild(bar);
 

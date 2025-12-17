@@ -5,11 +5,9 @@ Module.register("MMM-DailyWeatherPrompt", {
     location: "",
     units: "imperial", // 'imperial' (F) or 'metric' (C)
     updateInterval: 10 * 60 * 1000,
-    promptText: "Enter City, ST or ZIP",
     showFeelsLike: true,
     showHumidity: true,
-    showWind: true,
-    allowLocationChange: true
+    showWind: true
   },
 
   start() {
@@ -17,8 +15,6 @@ Module.register("MMM-DailyWeatherPrompt", {
     this.error = null;
     this.loading = false;
     this.userLocation = this.config.location;
-    this.isEditing = false;
-    this.keypadMode = "numeric";
     this.storageKey = "MMM-DailyWeatherPrompt::location";
 
     this.restoreLocation();
@@ -91,158 +87,10 @@ Module.register("MMM-DailyWeatherPrompt", {
     }
   },
 
-  setLocationFromInput(input) {
-    const value = input.value.trim();
-    if (!value) {
-      this.error = "Please enter a location.";
-      this.updateDom();
-      return;
-    }
-
-    this.userLocation = value;
-    this.isEditing = false;
-    this.saveLocation(value);
-    this.requestWeather();
-  },
-
-  handleKeypadInput(input, value) {
-    if (!input) {
-      return;
-    }
-
-    if (value === "BACKSPACE") {
-      input.value = input.value.slice(0, -1);
-      return;
-    }
-
-    if (value === "CLEAR") {
-      input.value = "";
-      return;
-    }
-
-    input.value += value;
-  },
-
   createPrompt() {
     const wrapper = document.createElement("div");
-    wrapper.className = "dwp-prompt";
-
-    const label = document.createElement("div");
-    label.className = "dwp-label";
-    label.innerHTML = this.config.promptText;
-    wrapper.appendChild(label);
-
-    const input = document.createElement("input");
-    input.type = "text";
-    input.className = "dwp-input";
-    input.placeholder = this.config.promptText;
-    input.value = this.userLocation || "";
-    wrapper.appendChild(input);
-
-    const button = document.createElement("button");
-    button.className = "dwp-button";
-    button.innerHTML = this.userLocation ? "Update" : "Save";
-    button.addEventListener("click", () => this.setLocationFromInput(input));
-    wrapper.appendChild(button);
-
-    const keypadSection = document.createElement("div");
-    keypadSection.className = "dwp-keypad";
-
-    const toggleRow = document.createElement("div");
-    toggleRow.className = "dwp-keypad-toggle";
-
-    const toggleLabel = document.createElement("div");
-    toggleLabel.className = "dwp-keypad-label";
-    toggleLabel.innerHTML = "Touch keypad";
-    toggleRow.appendChild(toggleLabel);
-
-    const toggleButtons = document.createElement("div");
-    toggleButtons.className = "dwp-toggle-group";
-
-    const numericBtn = document.createElement("button");
-    numericBtn.className = "dwp-toggle";
-    numericBtn.innerHTML = "ZIP";
-
-    const alphaBtn = document.createElement("button");
-    alphaBtn.className = "dwp-toggle";
-    alphaBtn.innerHTML = "Letters";
-
-    const updateToggleState = () => {
-      if (this.keypadMode === "numeric") {
-        numericBtn.classList.add("active");
-        alphaBtn.classList.remove("active");
-      } else {
-        alphaBtn.classList.add("active");
-        numericBtn.classList.remove("active");
-      }
-    };
-
-    numericBtn.addEventListener("click", () => {
-      this.keypadMode = "numeric";
-      this.updateDom();
-    });
-
-    alphaBtn.addEventListener("click", () => {
-      this.keypadMode = "alpha";
-      this.updateDom();
-    });
-
-    updateToggleState();
-
-    toggleButtons.appendChild(numericBtn);
-    toggleButtons.appendChild(alphaBtn);
-    toggleRow.appendChild(toggleButtons);
-    keypadSection.appendChild(toggleRow);
-
-    const keysGrid = document.createElement("div");
-    keysGrid.className = "dwp-keys";
-
-    const addKeyButton = (label, value = label) => {
-      const keyBtn = document.createElement("button");
-      keyBtn.className = "dwp-key";
-      keyBtn.innerHTML = label;
-      keyBtn.addEventListener("click", () => this.handleKeypadInput(input, value));
-      keysGrid.appendChild(keyBtn);
-    };
-
-    if (this.keypadMode === "numeric") {
-      ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"].forEach((digit) => addKeyButton(digit));
-    } else {
-      ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"].forEach((letter) => addKeyButton(letter));
-      addKeyButton("Space", " ");
-    }
-
-    addKeyButton("←", "BACKSPACE");
-    addKeyButton("Clear", "CLEAR");
-
-    keypadSection.appendChild(keysGrid);
-    wrapper.appendChild(keypadSection);
-
-    input.addEventListener("keyup", (evt) => {
-      if (evt.key === "Enter") {
-        this.setLocationFromInput(input);
-      }
-    });
-
-    if (this.isEditing && this.userLocation) {
-      const cancel = document.createElement("button");
-      cancel.className = "dwp-inline-btn dwp-cancel";
-      cancel.innerHTML = "Cancel";
-      cancel.addEventListener("click", () => {
-        this.isEditing = false;
-        this.error = null;
-        this.updateDom();
-      });
-      wrapper.appendChild(cancel);
-    }
-
-    if (this.error) {
-      const error = document.createElement("div");
-      error.className = "dwp-error";
-      error.innerHTML = this.error;
-      wrapper.appendChild(error);
-    }
-
+    wrapper.className = "dwp-notice";
+    wrapper.innerHTML = "Set your city, state, or ZIP from the Settings panel.";
     return wrapper;
   },
 
@@ -316,20 +164,6 @@ Module.register("MMM-DailyWeatherPrompt", {
     updated.innerHTML = `Updated ${this.weather.updated}`;
     footer.appendChild(updated);
 
-    if (this.config.allowLocationChange) {
-      const gear = document.createElement("button");
-      gear.className = "dwp-inline-btn dwp-gear";
-      gear.innerHTML = "⚙";
-      gear.title = "Change location";
-      gear.setAttribute("aria-label", "Change location");
-      gear.addEventListener("click", () => {
-        this.isEditing = true;
-        this.error = null;
-        this.updateDom();
-      });
-      footer.appendChild(gear);
-    }
-
     wrapper.appendChild(footer);
 
     if (Array.isArray(this.weather.forecast) && this.weather.forecast.length) {
@@ -381,7 +215,7 @@ Module.register("MMM-DailyWeatherPrompt", {
     const wrapper = document.createElement("div");
     wrapper.className = "dwp-container";
 
-    if (this.loading && !this.isEditing) {
+    if (this.loading) {
       const loading = document.createElement("div");
       loading.className = "dwp-loading";
       loading.innerHTML = "Loading weather...";
@@ -389,7 +223,7 @@ Module.register("MMM-DailyWeatherPrompt", {
       return wrapper;
     }
 
-    if (!this.userLocation || this.isEditing) {
+    if (!this.userLocation) {
       wrapper.appendChild(this.createPrompt());
       return wrapper;
     }
