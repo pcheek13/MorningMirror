@@ -9,12 +9,14 @@ fi
 SSID="$1"
 PASSWORD="$2"
 WPA_CONF="/etc/wpa_supplicant/wpa_supplicant.conf"
+WPA_INTERFACE="${WPA_INTERFACE:-wlan0}"
 BACKUP_SUFFIX=$(date +%Y%m%d%H%M%S)
 BACKUP_PATH="${WPA_CONF}.${BACKUP_SUFFIX}.bak"
 TMP_NETWORK=$(mktemp)
+TMP_CONF=$(mktemp)
 
 cleanup() {
-  rm -f "$TMP_NETWORK"
+  rm -f "$TMP_NETWORK" "$TMP_CONF"
 }
 
 trap cleanup EXIT
@@ -45,14 +47,37 @@ fi
 
 wpa_passphrase "$SSID" "$PASSWORD" > "$TMP_NETWORK"
 
-# Backup existing configuration and append the new network block
+# Backup existing configuration and rebuild the file with only the new network
 sudo cp "$WPA_CONF" "$BACKUP_PATH"
 
-echo "# Added by MMM-WIFI on $(date)" | sudo tee -a "$WPA_CONF" >/dev/null
-sudo tee -a "$WPA_CONF" < "$TMP_NETWORK" >/dev/null
+# Strip all existing network blocks so the new credentials become the only active Wi-Fi profile
+sudo awk '
+  /^\s*network\s*=\s*\{/ { in_network = 1; next }
+  in_network {
+    if ($0 ~ /^\s*\}/) { in_network = 0 }
+    next
+  }
+  { print }
+' "$WPA_CONF" | sudo tee "$TMP_CONF" >/dev/null
+
+if [[ ! -s "$TMP_CONF" ]]; then
+  COUNTRY_LINE=$(grep -m1 '^country=' "$WPA_CONF" 2>/dev/null || echo "country=US")
+  cat <<CFG | sudo tee "$TMP_CONF" >/dev/null
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+${COUNTRY_LINE}
+CFG
+fi
+
+{
+  echo "# Added by MMM-WIFI on $(date)"
+  cat "$TMP_NETWORK"
+} | sudo tee -a "$TMP_CONF" >/dev/null
+
+sudo install -m 600 "$TMP_CONF" "$WPA_CONF"
 
 # Reconfigure Wi-Fi and restart MorningMirror
-if ! timeout 15s sudo wpa_cli -i wlan0 reconfigure; then
+if ! timeout 15s sudo wpa_cli -i "$WPA_INTERFACE" reconfigure; then
   echo "wpa_cli reconfigure failed or timed out; restarting wpa_supplicant" >&2
   sudo systemctl restart wpa_supplicant.service
 fi

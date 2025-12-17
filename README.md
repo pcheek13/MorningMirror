@@ -88,6 +88,23 @@ The Wi‑Fi indicator now lives inside the settings panel: it shows strong/mediu
 
 MMM-WIFI now resolves its helper script using `{modulePath}` and ships with the executable bit set, so the Wi‑Fi update button can call `scripts/update-wifi.sh` without hitting "no such file" errors on fresh Raspberry Pi installs.
 
+## On-device Wi‑Fi updates (system prep)
+The bundled MMM-WIFI helper rewrites `/etc/wpa_supplicant/wpa_supplicant.conf` so it only contains the SSID/password you submit from the settings drawer. That guarantees the Pi disconnects from old networks instead of staying online via stale credentials. To let the mirror manage Wi‑Fi without prompting for a sudo password, run this copy/paste block after cloning (adjust the username or path if you installed the repo somewhere else):
+
+```bash
+sudo install -d -m 755 /etc/wpa_supplicant && \
+  sudo touch /etc/wpa_supplicant/wpa_supplicant.conf && \
+  sudo chmod 600 /etc/wpa_supplicant/wpa_supplicant.conf && \
+  cd ~/MorningMirror/modules/MMM-WIFI && \
+  chmod +x scripts/update-wifi.sh && \
+  sudo tee /etc/sudoers.d/morningmirror-wifi >/dev/null <<'EOF'
+pi ALL=(ALL) NOPASSWD:/home/pi/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh,/sbin/wpa_cli,/bin/systemctl restart wpa_supplicant.service
+EOF
+sudo chmod 440 /etc/sudoers.d/morningmirror-wifi
+```
+
+The helper defaults to `wlan0`. If your Wi‑Fi interface uses a different name, export `WPA_INTERFACE` with the correct value before starting PM2 (for example, `export WPA_INTERFACE=wlan1` in your shell or systemd unit).
+
 ## Troubleshooting common install errors
 - **`node: bad option: --run` when running `npm start`**: Older Node releases on Raspberry Pi OS do not ship with the experimental `--run` flag. The start scripts now call Electron directly; pull the latest changes and rerun `npm ci --omit=dev`.
 - **`Electron failed to install correctly, please delete node_modules/electron and try installing again`**: This happens when `ELECTRON_SKIP_BINARY_DOWNLOAD=1` is set or the download was interrupted. Fix it by removing Electron and reinstalling dependencies so the binary downloads:
