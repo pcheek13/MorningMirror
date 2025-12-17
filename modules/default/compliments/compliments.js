@@ -280,12 +280,17 @@ formatCompliment (text) {
 if (!text) {
 return "";
 }
-if (this.profileName) {
+const profileName = (this.profileName || this.config.profileName || "").trim();
+const fallbackName = profileName || "you";
+
 if (text.includes("{name}")) {
-return text.replace(/\{name\}/gi, this.profileName);
+return text.replace(/\{name\}/gi, fallbackName);
 }
-return `${this.profileName}, ${text}`;
+
+if (profileName) {
+return `${profileName}, ${text}`;
 }
+
 return text;
 },
 
