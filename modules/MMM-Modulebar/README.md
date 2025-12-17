@@ -2,7 +2,7 @@
 
 This an extension for the [MorningMirror](https://magicmirror.builders/).
 
-This Module adds a touch menu to hide / show the defined (in config.js) modules.
+This Module adds a touch menu to hide / show the defined (in config.js) modules. The refreshed layout ships with larger, high-contrast buttons, a glassy background that floats above full-screen effects, and an overlay that you can tap anywhere to wake the mirror when everything is hidden. The buttons now sync their visuals to the actual visibility of each target module on startup, so the on/off state is accurate even if other modules (profiles, schedules, etc.) hide things before Modulebar loads.
 
 ### Screen shots
 
@@ -26,17 +26,15 @@ This is my own mirrors view (Bottom Bar) using some addition in the custom.css [
 
 ![Modulebar Custom CSS](https://github.com/Snille/MMM-Modulebar/blob/master/.github/ModuleBar-05.png)
 
-### Installation
+### Raspberry Pi 5 one-liner install (copy/paste)
 
-In your terminal, go to your MorningMirror's Module folder:
-````
-cd ~/MorningMirror/modules
-````
+Run this single command from a clean Raspberry Pi 5 to clone MorningMirror (which includes MMM-Modulebar), install runtime dependencies, and launch the mirror immediately:
 
-Clone this repository:
-````
-git clone https://github.com/Snille/MMM-Modulebar.git
-````
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt update && sudo apt install -y git nodejs && git clone https://github.com/pcheek13/MorningMirror.git && cd MorningMirror && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev && cp config/config.js.sample config/config.js && npm start
+```
+
+The command installs Node 20, clones the repository, installs only the production dependencies (including Electron), copies the sample config into place, and boots the UI so you can immediately see the Modulebar in the `bottom_center` region.
 
 ### Using the module
 
@@ -69,7 +67,7 @@ The following properties can be configured:
 | `direction`        | `row`   | The direction of the menu. <br><br> **Possible values:** `row`, `column`, `row-reverse` or `column-reverse`
 | `animationSpeed`   | `1000`  | The speed of the hide and show animation (lower is faster) **Possible values:** 0-10000. 
 | `zindex`           | `1000`  | Z-Index value for the hide all plane (this is preferably a high value for the black plane to show above everything else. **Possible values:** 0-10000.
-| `visability`       | `0.4`   | Visibility of the "unhide all button" (if defined) when all is hidden **Possible values:** 0.0 - 1.0.
+| `visability`       | `0.4`   | Visibility of the "unhide all button" (if defined) when all is hidden **Possible values:** 0.0 - 1.0. (Alias: `visibility` is also accepted.)
 | `buttons`          | Clock example button | All the different buttons in the menu. <br><br> **Possible values:** a button configuration, see [Configuring Buttons](#configuring-buttons)
 
 ### Configuring Buttons
@@ -77,6 +75,8 @@ The following properties can be configured:
 Buttons have to be placed in `buttons` in the `config`. A button contains a unique number as a key and a set of options in the object (`{}`).
 
 Each button starts with it's own unique number (ex. "1"), then add the options needed.
+
+> The button that targets `module: "all"` is always rendered last so the hide/show toggle stays on the far right of the bar.
 
 | Option   | Description
 | -------- | -----------
@@ -146,6 +146,14 @@ An example:
     },
   }
 ````
+
+### UI enhancement ideas
+
+* **Align with your region:** Use `direction: "row-reverse"` when placing the bar in `bottom_bar` to keep the hide-all toggle on the right while the text flows naturally toward the center of the screen.
+* **Enforce consistent sizing:** Set `minWidth`/`minHeight` (for example `minWidth: "80px", minHeight: "72px"`) so touch targets stay finger-friendly and the bar keeps a tidy rhythm when you mix text and icon-only buttons.
+* **Swap icon placement on portrait screens:** Combine `picturePlacement: "top"` with `direction: "column"` to stack icons above text for narrow displays or framed monitors, and flip to `left`/`row` for landscape TVs.
+* **Add an always-visible wake handle:** Give your hide-all toggle a contrasting color via custom CSS (e.g., `.modulebar-button:last-of-type { background: #0b8; }`) so sleepers always know where to tap to wake the mirror.
+* **Soften the overlay:** If the blackout feels harsh, lower `visability` to around `0.25` and lighten the overlay in CSS (`background-color: rgba(0,0,0,0.6)`) so the UI remains perceivable while still dimming unused modules.
 
 ### Custom-CSS
 

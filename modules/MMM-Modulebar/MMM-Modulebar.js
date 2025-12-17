@@ -70,6 +70,10 @@ Module.register("MMM-Modulebar", {
   },
 
   start() {
+    if (typeof this.config.visibility === "number" && typeof this.config.visability === "undefined") {
+      this.config.visability = this.config.visibility;
+    }
+
     this.modulesHidden = false;
     this.sleepTimer = null;
     this.overlay = null;
@@ -89,17 +93,22 @@ Module.register("MMM-Modulebar", {
 
   // Define required styles.
   getStyles() {
-    return ["/css/font-awesome.css", "MMM-Modulebar.css"];
+    return ["font-awesome.css", this.file("MMM-Modulebar.css")];
   },
 
   // Override dom generator.
   getDom() {
     const container = document.createElement("div");
-    container.className = "modulebar-container";
+    container.className = "modulebar";
 
     const overlay = document.createElement("div");
     overlay.className = "paint-it-black";
     overlay.style.transitionDuration = `${this.config.animationSpeed}ms`;
+    overlay.addEventListener("click", () => {
+      if (this.modulesHidden) {
+        this.showAllModules(this.allButtonVisuals);
+      }
+    });
     this.overlay = overlay;
 
     const menu = document.createElement("span");
@@ -107,18 +116,49 @@ Module.register("MMM-Modulebar", {
     menu.id = `${this.identifier}_menu`;
     menu.style.flexDirection = this.config.direction;
 
-    for (const num in this.config.buttons) {
-      menu.appendChild(this.createButton(this, num, this.config.buttons[num], this.config.picturePlacement, overlay));
+    this.modulesHidden = this.areAllOtherModulesHidden();
+    if (this.modulesHidden) {
+      overlay.classList.add("visible");
     }
+
+    const sortedButtons = Object.keys(this.config.buttons).sort((a, b) => Number(a) - Number(b));
+    const regularButtons = [];
+    const toggleButtons = [];
+
+    sortedButtons.forEach((num) => {
+      const data = this.config.buttons[num];
+      const moduleName = typeof data.module === "string" ? data.module.toLowerCase() : "";
+      if (moduleName === "all") {
+        toggleButtons.push({ num, data });
+      } else {
+        regularButtons.push({ num, data });
+      }
+    });
+
+    const appendButton = ({ num, data }) => {
+      menu.appendChild(this.createButton(this, num, data, this.config.picturePlacement, overlay));
+    };
+
+    regularButtons.forEach(appendButton);
 
     const settingsButton = Object.assign({ module: "settings" }, this.config.settingsButton);
     menu.appendChild(this.createButton(this, "settings", settingsButton, this.config.picturePlacement, overlay));
+
+    toggleButtons.forEach(appendButton);
 
     menu.appendChild(overlay);
     container.appendChild(menu);
     container.appendChild(this.createSettingsPanel());
     this.syncAllButtonVisuals();
     return container;
+  },
+
+  areAllOtherModulesHidden() {
+    const modules = MM.getModules();
+    return !modules.some((module) => {
+      const isModulebar = module.name === this.name && module.identifier === this.identifier;
+      return !isModulebar && !module.hidden;
+    });
   },
 
   resetSleepTimer() {
@@ -215,6 +255,15 @@ Module.register("MMM-Modulebar", {
           module.show(this.config.animationSpeed, 0, { force: this.config.allowForce });
         }
       });
+    } else {
+      modules.forEach((module) => {
+        if (module.name === this.name && module.identifier === this.identifier) {
+          return;
+        }
+        if (module.hidden) {
+          module.show(this.config.animationSpeed, 0, { force: this.config.allowForce });
+        }
+      });
     }
 
     this.modulesHidden = false;
@@ -260,6 +309,18 @@ Module.register("MMM-Modulebar", {
     }
   },
 
+  matchesInstance(module, idnum) {
+    if (!Array.isArray(idnum)) {
+      return idnum == null || module.data.identifier.endsWith(`_${idnum}`);
+    }
+    return idnum.some((id) => module.data.identifier.endsWith(`_${id}`));
+  },
+
+  targetsAreHidden(modules, data) {
+    const targets = modules.filter((module) => module.name === data.module && this.matchesInstance(module, data.idnum));
+    return targets.length > 0 && targets.every((module) => module.hidden);
+  },
+
   syncAllButtonVisuals() {
     this.updateToggleVisuals(this.modulesHidden, this.allButtonVisuals);
   },
@@ -270,8 +331,14 @@ Module.register("MMM-Modulebar", {
     const item = document.createElement("span");
     item.id = `${self.identifier}_button_${num}`;
     item.className = "modulebar-button";
+    item.setAttribute("role", "button");
+    item.setAttribute("tabindex", "0");
 
     const modules = MM.getModules();
+
+    item.style.minWidth = self.config.minWidth;
+    item.style.minHeight = self.config.minHeight;
+    item.style.transition = `opacity ${self.config.animationSpeed}ms ease`;
 
     const setOverlayVisible = function (show) {
       overlay.classList.toggle("visible", show);
@@ -308,9 +375,6 @@ Module.register("MMM-Modulebar", {
       faclassName = "modulebar-picture ";
     } else {
       faclassName = "modulebar-picture fas fa-";
-      item.style.minWidth = self.config.minWidth;
-      item.style.minHeight = self.config.minHeight;
-      item.style.transition = `opacity ${self.config.animationSpeed}ms ease`;
     }
 
     const handleToggle = () => {
@@ -342,65 +406,60 @@ Module.register("MMM-Modulebar", {
       }
 
       for (let i = 0; i < modules.length; i++) {
-        if (modules[i].name === data.module) {
+        if (modules[i].name === data.module && self.matchesInstance(modules[i], data.idnum)) {
           const idnr = modules[i].data.identifier.split("_");
-          let idnumber;
-          if (Array.isArray(data.idnum)) {
-            idnumber = data.idnum.find(function (element) {
-              return element == idnr[1];
-            });
-          } else {
-            idnumber = data.idnum;
-          }
 
-          if (idnr[1] == idnumber || data.idnum == null) {
-            if (modules[i].hidden) {
-              if (data.showUrl != null) {
-                fetch(data.showUrl);
-                console.log("Visiting show URL: " + data.showUrl);
+          if (modules[i].hidden) {
+            if (data.showUrl != null) {
+              fetch(data.showUrl);
+              console.log("Visiting show URL: " + data.showUrl);
+            }
+            modules[i].show(self.config.animationSpeed, 0, { force: self.config.allowForce });
+            if (typeof data.symbol !== "undefined") {
+              symbol.className = faclassName + data.symbol;
+              if (data.size) {
+                symbol.className += " fa-" + data.size;
+                symbol.className += data.size == 1 ? "g" : "x";
               }
-              modules[i].show(self.config.animationSpeed, 0, { force: self.config.allowForce });
-              if (typeof data.symbol !== "undefined") {
-                symbol.className = faclassName + data.symbol;
-                if (data.size) {
-                  symbol.className += " fa-" + data.size;
-                  symbol.className += data.size == 1 ? "g" : "x";
-                }
-              } else if (typeof data.img !== "undefined") {
-                image.className = "modulebar-picture";
-                image.src = data.img;
+            } else if (typeof data.img !== "undefined") {
+              image.className = "modulebar-picture";
+              image.src = data.img;
+            }
+            if (typeof data.text !== "undefined") {
+              text.innerHTML = data.text;
+            }
+            console.log("Showing " + modules[i].name + " ID: " + idnr[1]);
+          } else {
+            modules[i].hide(self.config.animationSpeed, 0, { force: self.config.allowForce });
+            if (typeof data.symbol2 !== "undefined") {
+              symbol.className = faclassName + data.symbol2;
+              if (data.size) {
+                symbol.className += " fa-" + data.size;
+                symbol.className += data.size == 1 ? "g" : "x";
               }
-              if (typeof data.text !== "undefined") {
-                text.innerHTML = data.text;
-              }
-              console.log("Showing " + modules[i].name + " ID: " + idnr[1]);
-            } else {
-              modules[i].hide(self.config.animationSpeed, 0, { force: self.config.allowForce });
-              if (typeof data.symbol2 !== "undefined") {
-                symbol.className = faclassName + data.symbol2;
-                if (data.size) {
-                  symbol.className += " fa-" + data.size;
-                  symbol.className += data.size == 1 ? "g" : "x";
-                }
-              } else if (typeof data.img2 !== "undefined") {
-                image.className = "modulebar-picture";
-                image.src = data.img2;
-              }
-              if (typeof data.text2 !== "undefined") {
-                text.innerHTML = data.text2;
-              }
-              console.log("Hiding " + modules[i].name + " ID: " + idnr[1]);
-              if (data.hideUrl != null) {
-                fetch(data.hideUrl);
-                console.log("Visiting hide URL: " + data.hideUrl);
-              }
+            } else if (typeof data.img2 !== "undefined") {
+              image.className = "modulebar-picture";
+              image.src = data.img2;
+            }
+            if (typeof data.text2 !== "undefined") {
+              text.innerHTML = data.text2;
+            }
+            console.log("Hiding " + modules[i].name + " ID: " + idnr[1]);
+            if (data.hideUrl != null) {
+              fetch(data.hideUrl);
+              console.log("Visiting hide URL: " + data.hideUrl);
             }
           }
         }
       }
     };
-
     item.addEventListener("click", handleToggle);
+    item.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        handleToggle();
+      }
+    });
 
     item.style.flexDirection = {
       right: "row-reverse",
@@ -449,8 +508,12 @@ Module.register("MMM-Modulebar", {
       item.appendChild(text);
     }
 
+    const visuals = { symbol, image, text, data, faclassName };
+
     if (data.module === "all") {
-      this.allButtonVisuals = { symbol, image, text, data, faclassName };
+      this.allButtonVisuals = visuals;
+    } else if (data.module !== "settings" && this.targetsAreHidden(modules, data)) {
+      this.updateToggleVisuals(true, visuals);
     }
 
     return item;
