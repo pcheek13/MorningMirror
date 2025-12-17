@@ -21,8 +21,13 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(4px);
     max-width: 90vw;
-    position: relative;
-    z-index: 1200;
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    z-index: var(--modulebar-z, 1200);
+    pointer-events: auto;
+    isolation: isolate;
 }
 
 .modulebar-menu {
@@ -79,7 +84,7 @@
     width: 100%;
     height: 100%;
     background-color: #000;
-    z-index: 900;
+    z-index: var(--modulebar-overlay-z, 1100);
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;

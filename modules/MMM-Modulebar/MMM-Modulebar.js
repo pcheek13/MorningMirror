@@ -101,9 +101,15 @@ Module.register("MMM-Modulebar", {
     const container = document.createElement("div");
     container.className = "modulebar";
 
+    const baseZIndex = Number.isFinite(Number(this.config.zindex))
+      ? Number(this.config.zindex)
+      : 1000;
+    container.style.zIndex = `${baseZIndex + 1}`;
+
     const overlay = document.createElement("div");
     overlay.className = "paint-it-black";
     overlay.style.transitionDuration = `${this.config.animationSpeed}ms`;
+    overlay.style.zIndex = `${baseZIndex}`;
     overlay.addEventListener("click", () => {
       if (this.modulesHidden) {
         this.showAllModules(this.allButtonVisuals);
