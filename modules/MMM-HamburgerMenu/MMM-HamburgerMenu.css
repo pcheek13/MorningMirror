@@ -95,6 +95,11 @@
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(12px);
   pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 80vh;
+  overflow: hidden;
 }
 
 .mmm-hamburger-menu__panel-title {
@@ -102,6 +107,16 @@
   color: var(--color-text-bright, #fff);
   margin-bottom: 8px;
   letter-spacing: 0.3px;
+}
+
+.mmm-hamburger-menu__panel-content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+  margin-right: -4px;
 }
 
 .mmm-hamburger-menu__forms {
@@ -210,6 +225,28 @@
   border-radius: 10px;
 }
 
+.mmm-hamburger-menu__keyboard-modes {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-start;
+}
+
+.mmm-hamburger-menu__keyboard-mode {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  cursor: pointer;
+  transition: background 120ms ease, transform 120ms ease, border-color 120ms ease;
+}
+
+.mmm-hamburger-menu__keyboard-mode.is-active {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
 .mmm-hamburger-menu__keyboard-row {
   display: flex;
   gap: 6px;
@@ -217,8 +254,8 @@
 }
 
 .mmm-hamburger-menu__keyboard-key {
-  min-width: 38px;
-  padding: 6px 8px;
+  min-width: 42px;
+  padding: 8px 10px;
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(255, 255, 255, 0.08);
