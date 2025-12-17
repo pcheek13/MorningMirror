@@ -15,6 +15,7 @@ Module.register("MMM-DailyWeatherPrompt", {
     this.error = null;
     this.loading = false;
     this.userLocation = this.config.location;
+    this.locationCoords = null;
     this.storageKey = "MMM-DailyWeatherPrompt::location";
 
     this.restoreLocation();
@@ -65,6 +66,7 @@ Module.register("MMM-DailyWeatherPrompt", {
 
     this.error = null;
     this.loading = true;
+    this.locationCoords = null;
     this.updateDom();
 
     this.sendSocketNotification("FETCH_WEATHER", {
@@ -81,6 +83,14 @@ Module.register("MMM-DailyWeatherPrompt", {
       } else {
         this.weather = payload;
         this.error = null;
+        if (typeof payload.latitude === "number" && typeof payload.longitude === "number") {
+          this.locationCoords = {
+            lat: payload.latitude,
+            lon: payload.longitude,
+            locationName: payload.locationName
+          };
+          this.sendNotification("LOCATION_COORDINATES", this.locationCoords);
+        }
       }
       this.loading = false;
       this.updateDom();

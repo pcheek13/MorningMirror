@@ -57,10 +57,10 @@ module.exports = NodeHelper.create({
 
     const data = await response.json();
 
-    return this.transformWeather(coords.displayName, data, units);
+    return this.transformWeather(coords.displayName, coords, data, units);
   },
 
-  transformWeather(locationName, data, units) {
+  transformWeather(locationName, coords, data, units) {
     const current = data.current || {};
     const daily = data.daily || {};
 
@@ -71,6 +71,8 @@ module.exports = NodeHelper.create({
 
     return {
       locationName,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
       summary: this.describeWeather(current.weather_code),
       temperature: this.round(current.temperature_2m),
       high: this.round(high),
