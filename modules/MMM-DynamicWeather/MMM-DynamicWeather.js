@@ -124,6 +124,7 @@ Module.register("MMM-DynamicWeather", {
         this.weatherTimeout = null;
         this.holidayTimeout = null;
         this.allEffects = [];
+        this.manualOverride = "";
         this.apiKey = this.config.api_key || this.config.apiKey;
         this.hasApiKey = !!this.apiKey;
         if (!this.hasApiKey) {
@@ -198,6 +199,18 @@ Module.register("MMM-DynamicWeather", {
             if (Number.isFinite(lat) && Number.isFinite(lon)) {
                 this.updateCoordinates(lat, lon);
             }
+        }
+        if (notification === "DYNAMIC_WEATHER_OVERRIDE") {
+            var mode = payload && typeof payload.mode === "string" ? payload.mode.trim() : "";
+            this.manualOverride = mode;
+            if (mode) {
+                this.finishBootPreview();
+            }
+            this.updateDom();
+        }
+        if (notification === "MIRROR_WAKE") {
+            this.manualOverride = "";
+            this.updateDom();
         }
     },
     buildApiUrl: function (lat, lon, locationId) {
@@ -307,20 +320,43 @@ Module.register("MMM-DynamicWeather", {
         return overlay;
     },
     renderBootPreviewEffect: function (wrapper, effectName) {
-        switch (effectName) {
+        this.renderDisplayMode(wrapper, effectName);
+    },
+    renderDisplayMode: function (wrapper, mode) {
+        switch (mode) {
             case "snow": {
                 this.showCustomEffect(wrapper, this.snowEffect);
                 if (this.config.hideSnowman === false || this.config.hideSnowman === "false") {
                     this.buildSnowman(wrapper);
                 }
-                break;
+                return true;
+            }
+            case "sun": {
+                this.makeItSunny(wrapper);
+                return true;
+            }
+            case "moon": {
+                this.makeItMoon(wrapper);
+                return true;
             }
             case "rain": {
                 this.makeItRain(wrapper);
                 if (this.config.hideFlower === false || this.config.hideFlower === "false") {
                     this.buildFlower(wrapper);
                 }
-                break;
+                return true;
+            }
+            case "lightning": {
+                this.makeItLightning(wrapper);
+                return true;
+            }
+            case "rain-lightning": {
+                this.makeItRain(wrapper);
+                this.makeItLightning(wrapper);
+                if (this.config.hideFlower === false || this.config.hideFlower === "false") {
+                    this.buildFlower(wrapper);
+                }
+                return true;
             }
             case "cloudy": {
                 if (this.config.realisticClouds) {
@@ -329,26 +365,14 @@ Module.register("MMM-DynamicWeather", {
                 else {
                     this.makeItCloudy(wrapper);
                 }
-                break;
-            }
-            case "sun": {
-                this.makeItSunny(wrapper);
-                break;
-            }
-            case "moon": {
-                this.makeItMoon(wrapper);
-                break;
+                return true;
             }
             case "fog": {
                 this.makeItFoggy(wrapper);
-                break;
-            }
-            case "lightning": {
-                this.makeItLightning(wrapper);
-                break;
+                return true;
             }
             default: {
-                break;
+                return false;
             }
         }
     },
@@ -470,6 +494,11 @@ Module.register("MMM-DynamicWeather", {
                 }
                 return wrapper;
             }
+            var manualMode = (this.manualOverride || "").trim();
+            if (manualMode) {
+                this.renderDisplayMode(wrapper, manualMode);
+                return wrapper;
+            }
             //setup the fade-out animation
             var fadeDuration = parseInt(this.config.fadeDuration);
             var animationDelay = parseInt(this.config.effectDuration) - fadeDuration;
@@ -484,55 +513,10 @@ Module.register("MMM-DynamicWeather", {
                 }
             };
             if (this.config.alwaysDisplay) {
-                switch (this.config.alwaysDisplay) {
-                    case "snow": {
-                        this.showCustomEffect(wrapper, this.snowEffect);
-                        if (this.config.hideSnowman === false || this.config.hideSnowman === "false") {
-                            this.buildSnowman(wrapper);
-                        }
-                        break;
-                    }
-                    case "sun": {
-                        this.makeItSunny(wrapper);
-                        break;
-                    }
-                    case "moon": {
-                        this.makeItMoon(wrapper);
-                        break;
-                    }
-                    case "rain": {
-                        this.makeItRain(wrapper);
-                        if (this.config.hideFlower === false || this.config.hideFlower === "false") {
-                            this.buildFlower(wrapper);
-                        }
-                        break;
-                    }
-                    case "lightning": {
-                        this.makeItLightning(wrapper);
-                        break;
-                    }
-                    case "rain-lightning": {
-                        this.makeItRain(wrapper);
-                        this.makeItLightning(wrapper);
-                        break;
-                    }
-                    case "cloudy": {
-                        if (this.config.realisticClouds) {
-                            this.showCustomEffect(wrapper, this.realisticCloudsEffect);
-                        }
-                        else {
-                            this.makeItCloudy(wrapper);
-                        }
-                        break;
-                    }
-                    case "fog": {
-                        this.makeItFoggy(wrapper);
-                        break;
-                    }
-                    default: {
-                        console.error("[MMM-DynamicWeather] Invalid config option 'alwaysDisplay'");
-                    }
+                if (this.renderDisplayMode(wrapper, this.config.alwaysDisplay)) {
+                    return wrapper;
                 }
+                console.error("[MMM-DynamicWeather] Invalid config option 'alwaysDisplay'");
                 return wrapper;
             }
             if (!this.weatherLoaded || !this.holidayLoaded)

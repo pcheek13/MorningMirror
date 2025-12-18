@@ -8,7 +8,7 @@ Module.register("MMM-HamburgerMenu", {
     saveProfileLabel: "Save",
     sleepLabel: "Sleep",
     wakeLabel: "Wake",
-    sleepTimerLabel: "Auto sleep after (minutes)",
+    sleepTimerLabel: "Sleep timer",
     sleepTimerHelper: "Set to 0 to keep the mirror awake",
     sleepSaveLabel: "Save sleep timer",
     wifiLabel: "Wi-Fi",
@@ -21,13 +21,26 @@ Module.register("MMM-HamburgerMenu", {
     complimentsToggleLabel: "Show compliments when waking",
     complimentsToggleHelper: "Controls the initial wake greeting",
     modulesLabel: "Modules",
-    modulesHelper: "Toggle any default module on or off. Changes stay saved until you re-enable them.",
+    modulesHelper: "",
     rebootLabel: "Restart MorningMirror",
     rebootHelper: "",
     rebootConfirmMessage: "Restart MorningMirror now?",
     rebootPendingStatus: "Rebooting...",
     rebootFailedStatus: "Reboot failed. Check logs.",
     rebootCommand: "sudo /sbin/reboot",
+    weatherOverrideLabel: "Weather",
+    weatherOverrideHelper:
+      "Pick a temporary weather scene for the full-screen effects.",
+    weatherOverrideResetHelper: "Selection clears on wake or reboot.",
+    weatherOverrideLiveLabel: "Automatic (live weather)",
+    weatherOverrideSunLabel: "Sunny",
+    weatherOverrideMoonLabel: "Night sky",
+    weatherOverrideRainLabel: "Rain",
+    weatherOverrideLightningLabel: "Lightning",
+    weatherOverrideRainLightningLabel: "Rain + lightning",
+    weatherOverrideCloudyLabel: "Clouds",
+    weatherOverrideFogLabel: "Fog",
+    weatherOverrideSnowLabel: "Snow",
     autoSleepMinutes: 15,
     showComplimentsOnWake: true,
     showVirtualKeyboard: true,
@@ -56,6 +69,8 @@ Module.register("MMM-HamburgerMenu", {
     this.weatherLocation = "";
     this.autoSleepMinutes = this.config.autoSleepMinutes;
     this.showComplimentsOnWake = this.config.showComplimentsOnWake;
+    this.weatherOverride = "";
+    this.weatherOverrideStatus = "";
     this.moduleVisibility = {};
     this.availableModuleNames = [];
     this.openSettingsSections = new Set();
@@ -323,6 +338,7 @@ Module.register("MMM-HamburgerMenu", {
 
   wakeScreen() {
     this.resetSleepTimer();
+    this.resetWeatherOverride();
     const modules = MM.getModules();
     modules.enumerate((module) => {
       const enabled = this.isModuleEnabled(module?.name);
@@ -390,6 +406,49 @@ Module.register("MMM-HamburgerMenu", {
     this.sendNotification("LOCATION_UPDATED", { location });
   },
 
+  sendWeatherOverride(mode) {
+    this.sendNotification("DYNAMIC_WEATHER_OVERRIDE", { mode });
+  },
+
+  formatWeatherOverrideLabel(mode) {
+    const labels = {
+      "": this.config.weatherOverrideLiveLabel,
+      sun: this.config.weatherOverrideSunLabel,
+      moon: this.config.weatherOverrideMoonLabel,
+      rain: this.config.weatherOverrideRainLabel,
+      lightning: this.config.weatherOverrideLightningLabel,
+      "rain-lightning": this.config.weatherOverrideRainLightningLabel,
+      cloudy: this.config.weatherOverrideCloudyLabel,
+      fog: this.config.weatherOverrideFogLabel,
+      snow: this.config.weatherOverrideSnowLabel,
+    };
+
+    return labels[mode] || this.config.weatherOverrideLiveLabel;
+  },
+
+  handleWeatherOverrideChange(selection) {
+    const normalized = (selection || "").trim();
+    this.weatherOverride = normalized;
+    this.sendWeatherOverride(normalized || null);
+
+    this.weatherOverrideStatus = normalized
+      ? `${this.formatWeatherOverrideLabel(normalized)} locked until wake or reboot`
+      : "Weather is following live conditions";
+    this.updateDom();
+  },
+
+  resetWeatherOverride() {
+    if (!this.weatherOverride) {
+      this.sendWeatherOverride(null);
+      return;
+    }
+
+    this.weatherOverride = "";
+    this.weatherOverrideStatus = this.config.weatherOverrideResetHelper;
+    this.sendWeatherOverride(null);
+    this.updateDom();
+  },
+
   handleSleepSubmit(input) {
     const minutes = Number.parseInt((input?.value || "").trim(), 10);
 
@@ -406,8 +465,11 @@ Module.register("MMM-HamburgerMenu", {
     this.updateDom();
   },
 
-  handleComplimentToggle(input) {
-    const isChecked = Boolean(input?.checked);
+  handleComplimentToggle(inputOrChecked) {
+    const isChecked =
+      typeof inputOrChecked === "boolean"
+        ? inputOrChecked
+        : Boolean(inputOrChecked?.checked);
     this.showComplimentsOnWake = isChecked;
     this.persistComplimentPreference(isChecked);
     this.complimentStatus = isChecked
@@ -849,6 +911,67 @@ Module.register("MMM-HamburgerMenu", {
     return form;
   },
 
+  renderWeatherOverrideForm({ includeHeading = true } = {}) {
+    const form = document.createElement("form");
+    form.className = "mmm-hamburger-menu__weather";
+
+    if (includeHeading) {
+      const label = document.createElement("div");
+      label.className = "mmm-hamburger-menu__section-title";
+      label.textContent = this.config.weatherOverrideLabel;
+      form.appendChild(label);
+    }
+
+    const select = document.createElement("select");
+    const options = [
+      { value: "", label: this.config.weatherOverrideLiveLabel },
+      { value: "sun", label: this.config.weatherOverrideSunLabel },
+      { value: "moon", label: this.config.weatherOverrideMoonLabel },
+      { value: "rain", label: this.config.weatherOverrideRainLabel },
+      { value: "lightning", label: this.config.weatherOverrideLightningLabel },
+      {
+        value: "rain-lightning",
+        label: this.config.weatherOverrideRainLightningLabel,
+      },
+      { value: "cloudy", label: this.config.weatherOverrideCloudyLabel },
+      { value: "fog", label: this.config.weatherOverrideFogLabel },
+      { value: "snow", label: this.config.weatherOverrideSnowLabel },
+    ];
+
+    options.forEach((option) => {
+      const opt = document.createElement("option");
+      opt.value = option.value;
+      opt.textContent = option.label;
+      select.appendChild(opt);
+    });
+
+    select.value = this.weatherOverride;
+    form.appendChild(select);
+
+    const helper = document.createElement("div");
+    helper.className = "mmm-hamburger-menu__helper";
+    helper.textContent = this.config.weatherOverrideHelper;
+    form.appendChild(helper);
+
+    const resetHelper = document.createElement("div");
+    resetHelper.className = "mmm-hamburger-menu__helper";
+    resetHelper.textContent = this.config.weatherOverrideResetHelper;
+    form.appendChild(resetHelper);
+
+    if (this.weatherOverrideStatus) {
+      const status = document.createElement("div");
+      status.className = "mmm-hamburger-menu__status";
+      status.textContent = this.weatherOverrideStatus;
+      form.appendChild(status);
+    }
+
+    form.addEventListener("change", () => {
+      this.handleWeatherOverrideChange(select.value);
+    });
+
+    return form;
+  },
+
   renderExtraButtons(container) {
     if (!Array.isArray(this.config.extraButtons)) {
       return;
@@ -884,15 +1007,13 @@ Module.register("MMM-HamburgerMenu", {
     const forms = document.createElement("div");
     forms.className = "mmm-hamburger-menu__forms";
 
-    if (this.availableModuleNames.length > 0) {
-      forms.appendChild(
-        this.renderCollapsibleSection(
-          "modules",
-          this.config.modulesLabel,
-          () => this.renderModuleToggles({ includeHeading: false })
-        )
-      );
-    }
+    forms.appendChild(
+      this.renderCollapsibleSection(
+        "modules",
+        this.config.modulesLabel,
+        () => this.renderModuleToggles({ includeHeading: false })
+      )
+    );
 
     forms.appendChild(
       this.renderCollapsibleSection("profile", "Profile", () =>
@@ -915,16 +1036,16 @@ Module.register("MMM-HamburgerMenu", {
     );
     forms.appendChild(
       this.renderCollapsibleSection(
-        "sleep",
-        this.config.sleepTimerLabel,
-        () => this.renderSleepForm({ includeHeading: false })
+        "weather",
+        this.config.weatherOverrideLabel,
+        () => this.renderWeatherOverrideForm({ includeHeading: false })
       )
     );
     forms.appendChild(
       this.renderCollapsibleSection(
-        "compliments",
-        this.config.complimentsToggleLabel,
-        () => this.renderComplimentToggle({ includeHeading: false })
+        "sleep",
+        this.config.sleepTimerLabel,
+        () => this.renderSleepForm({ includeHeading: false })
       )
     );
     forms.appendChild(
@@ -986,45 +1107,6 @@ Module.register("MMM-HamburgerMenu", {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       this.handleSleepSubmit(input);
-    });
-
-    return form;
-  },
-
-  renderComplimentToggle({ includeHeading = true } = {}) {
-    const form = document.createElement("form");
-    form.className = "mmm-hamburger-menu__compliments";
-
-    if (includeHeading) {
-      const label = document.createElement("div");
-      label.className = "mmm-hamburger-menu__section-title";
-      label.textContent = this.config.complimentsToggleLabel;
-      form.appendChild(label);
-    }
-
-    const toggleWrapper = document.createElement("label");
-    toggleWrapper.className = "mmm-hamburger-menu__toggle";
-
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.checked = this.showComplimentsOnWake;
-    toggleWrapper.appendChild(input);
-
-    const span = document.createElement("span");
-    span.textContent = this.config.complimentsToggleHelper;
-    toggleWrapper.appendChild(span);
-
-    form.appendChild(toggleWrapper);
-
-    if (this.complimentStatus) {
-      const status = document.createElement("div");
-      status.className = "mmm-hamburger-menu__status";
-      status.textContent = this.complimentStatus;
-      form.appendChild(status);
-    }
-
-    form.addEventListener("change", () => {
-      this.handleComplimentToggle(input);
     });
 
     return form;
@@ -1099,13 +1181,17 @@ Module.register("MMM-HamburgerMenu", {
       wrapper.appendChild(title);
     }
 
-    const helper = document.createElement("div");
-    helper.className = "mmm-hamburger-menu__helper";
-    helper.textContent = this.config.modulesHelper;
-    wrapper.appendChild(helper);
+    if (this.config.modulesHelper) {
+      const helper = document.createElement("div");
+      helper.className = "mmm-hamburger-menu__helper";
+      helper.textContent = this.config.modulesHelper;
+      wrapper.appendChild(helper);
+    }
 
     const list = document.createElement("div");
     list.className = "mmm-hamburger-menu__modules-list";
+
+    list.appendChild(this.renderComplimentsToggleRow());
 
     this.availableModuleNames.forEach((moduleName) => {
       const row = document.createElement("label");
@@ -1127,7 +1213,32 @@ Module.register("MMM-HamburgerMenu", {
     });
 
     wrapper.appendChild(list);
+
+    if (this.complimentStatus) {
+      const status = document.createElement("div");
+      status.className = "mmm-hamburger-menu__status";
+      status.textContent = this.complimentStatus;
+      wrapper.appendChild(status);
+    }
+
     return wrapper;
+  },
+
+  renderComplimentsToggleRow() {
+    const row = document.createElement("label");
+    row.className = "mmm-hamburger-menu__module-row";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = this.showComplimentsOnWake;
+    input.addEventListener("change", () => this.handleComplimentToggle(input));
+    row.appendChild(input);
+
+    const name = document.createElement("span");
+    name.textContent = this.config.complimentsToggleLabel;
+    row.appendChild(name);
+
+    return row;
   },
 
   renderVirtualKeyboard() {
