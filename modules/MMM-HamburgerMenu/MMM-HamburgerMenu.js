@@ -783,7 +783,41 @@ Module.register("MMM-HamburgerMenu", {
     password.type = "password";
     password.placeholder = this.config.wifiPasswordPlaceholder;
     password.value = this.wifiCredentials.password;
-    form.appendChild(password);
+
+    const toggleWrapper = document.createElement("div");
+    toggleWrapper.className = "mmm-hamburger-menu__password";
+
+    toggleWrapper.appendChild(password);
+
+    const toggleButton = document.createElement("button");
+    toggleButton.type = "button";
+    toggleButton.className = "mmm-hamburger-menu__password-toggle";
+    toggleButton.setAttribute("aria-pressed", "false");
+    toggleButton.setAttribute("aria-label", "Show or hide Wi-Fi password");
+
+    const toggleIcon = document.createElement("i");
+    toggleButton.appendChild(toggleIcon);
+
+    const toggleText = document.createElement("span");
+    toggleText.className = "mmm-hamburger-menu__password-toggle-label";
+    toggleButton.appendChild(toggleText);
+
+    const syncToggle = () => {
+      const isVisible = password.type === "text";
+      toggleButton.setAttribute("aria-pressed", String(isVisible));
+      toggleIcon.className = `fa fa-${isVisible ? "eye-slash" : "eye"}`;
+      toggleText.textContent = isVisible ? "Hide" : "Show";
+    };
+
+    toggleButton.addEventListener("click", () => {
+      password.type = password.type === "password" ? "text" : "password";
+      syncToggle();
+      password.focus({ preventScroll: true });
+    });
+
+    syncToggle();
+    toggleWrapper.appendChild(toggleButton);
+    form.appendChild(toggleWrapper);
 
     this.registerKeyboardInput(ssid, "wifi-ssid");
     this.registerKeyboardInput(password, "wifi-password");

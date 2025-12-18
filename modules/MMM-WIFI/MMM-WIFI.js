@@ -23,7 +23,7 @@ Module.register("MMM-WIFI", {
         allowWifiUpdates: true,
         wifiCommand: {
             executable: "sudo",
-            args: ["/usr/local/sbin/mm-set-wifi.sh", "{ssid}", "{password}"],
+            args: ["{modulePath}/scripts/update-wifi.sh", "{ssid}", "{password}"],
             timeout: 20000,
             maxBuffer: 1024 * 1024,
         },
