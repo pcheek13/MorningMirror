@@ -53,12 +53,26 @@ module.exports = NodeHelper.create({
             const timeout = command.timeout || 20000;
             const maxBuffer = command.maxBuffer || 1024 * 1024;
 
-            const processedArgs = argsTemplate.map(arg =>
-                arg
-                    .replace("{modulePath}", moduleRoot)
+            const processedArgs = argsTemplate.map(arg => {
+                if (typeof arg !== "string") {
+                    return arg;
+                }
+
+                const moduleResolved = arg.includes("{modulePath}")
+                    ? arg.split("{modulePath}").reduce((accum, segment, index) => {
+                        if (index === 0) {
+                            return segment;
+                        }
+
+                        const normalized = path.join(moduleRoot, segment.replace(/^\/+/, ""));
+                        return `${accum}${normalized}`;
+                    }, "")
+                    : arg;
+
+                return moduleResolved
                     .replace("{ssid}", ssid)
-                    .replace("{password}", password),
-            );
+                    .replace("{password}", password);
+            });
 
             const finalExecutable = config.useSudoForWifiCommand && executable !== "sudo"
                 ? "sudo"

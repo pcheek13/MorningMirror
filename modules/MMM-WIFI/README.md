@@ -63,3 +63,4 @@ When `allowWifiUpdates` is true, entering an SSID/password in the settings panel
 - **Permission denied / sudo prompt**: ensure the sudoers entry exists and matches the user running MorningMirror.
 - **nmcli not found**: install NetworkManager (`sudo apt install network-manager`) or adjust `wifiCommand` to a different backend (e.g., `raspi-config nonint do_wifi_ssid_passphrase`).
 - **Different user service**: if you run MorningMirror under `pi` (or a systemd service user), re-run the install snippet with `MIRROR_USER` set to that user so sudoers matches.
+- **Command shows `{modulePath}/scripts/update-wifi.sh`**: upgrade to the latest module (or copy the updated `node_helper.js`) so the helper resolves `{modulePath}` to the module directory automatically—even if the placeholder was left untouched in your config.
