@@ -87,23 +87,24 @@ Use the hamburger toggle to reveal shortcuts. The built-in settings gear broadca
 
 The settings drawer now includes an adjustable auto sleep timer (enter 0 to disable) plus a checkbox that controls whether the compliments module shows its brief wake greeting. Both values are persisted locally so they survive refreshes and keep their state unless you wipe the browser storage or reimage the Pi.
 
-The Wi‑Fi indicator now lives inside the settings panel: it shows strong/medium/weak states, flashes while credentials are updating, and switches to an empty red slash when the connection drops. MMM-WIFI’s node helper calls the new `mm-set-wifi.sh` NetworkManager helper via `sudo` so Bookworm systems can join networks without editing `/etc/wpa_supplicant/wpa_supplicant.conf`.
+The Wi‑Fi indicator now lives inside the settings panel: it shows strong/medium/weak states, flashes while credentials are updating, and switches to an empty red slash when the connection drops. MMM-WIFI’s node helper calls the NetworkManager helper via `sudo` so Bookworm systems can join networks without editing `/etc/wpa_supplicant/wpa_supplicant.conf`. The helper now rescans for networks, creates or updates a profile for the SSID, and attempts to bring it up even for hidden networks or mobile hotspots that are not visible on the first scan.
 
 ## On-device Wi‑Fi updates (system prep)
 MorningMirror’s bundled MMM-WIFI module targets Raspberry Pi OS **Bookworm** with **NetworkManager** and uses `nmcli` to apply Wi‑Fi credentials safely. Run this single block after cloning so the helper script is installed and the MagicMirror user can execute it without a sudo prompt (set `MIRROR_USER` if the app runs under a different account):
 
 ```bash
-MIRROR_USER=${MIRROR_USER:-$(whoami)} && \
-  cd ~/MorningMirror/modules/MMM-WIFI && \
+MIRROR_ROOT=${MIRROR_ROOT:-/home/pi/MorningMirror} && \
+  MIRROR_USER=${MIRROR_USER:-$(whoami)} && \
+  cd "$MIRROR_ROOT/modules/MMM-WIFI" && \
   sudo install -m 0755 scripts/mm-set-wifi.sh /usr/local/sbin/mm-set-wifi.sh && \
-  echo "${MIRROR_USER} ALL=(root) NOPASSWD: /usr/local/sbin/mm-set-wifi.sh" | sudo tee /etc/sudoers.d/magicmirror-wifi >/dev/null && \
+  echo "${MIRROR_USER} ALL=(root) NOPASSWD: /usr/local/sbin/mm-set-wifi.sh, $(pwd)/scripts/update-wifi.sh, $(pwd)/scripts/mm-set-wifi.sh" | sudo tee /etc/sudoers.d/magicmirror-wifi >/dev/null && \
   sudo chmod 440 /etc/sudoers.d/magicmirror-wifi
 ```
 
 What this does:
 - Installs the `nmcli`-based helper at `/usr/local/sbin/mm-set-wifi.sh` with the correct permissions.
-- Grants a tightly scoped sudo rule so the MagicMirror process can call only that script without a password prompt.
-- Keeps NetworkManager in control—no edits to `/etc/wpa_supplicant/wpa_supplicant.conf` are required on Bookworm.
+- Grants a tightly scoped sudo rule so the MagicMirror process can call only the Wi‑Fi helpers (global and module-local) without a password prompt.
+- Keeps NetworkManager in control—no edits to `/etc/wpa_supplicant/wpa_supplicant.conf` are required on Bookworm. Hidden networks and hotspots are handled by creating/updating a profile and attempting to bring it online after a rescan.
 
 ## Troubleshooting common install errors
 - **`node: bad option: --run` when running `npm start`**: Older Node releases on Raspberry Pi OS do not ship with the experimental `--run` flag. The start scripts now call Electron directly; pull the latest changes and rerun `npm ci --omit=dev`.
