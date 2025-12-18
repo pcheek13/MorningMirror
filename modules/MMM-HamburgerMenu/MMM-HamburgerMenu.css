@@ -244,6 +244,45 @@
   box-shadow: 0 0 0 2px rgba(127, 255, 212, 0.25);
 }
 
+.mmm-hamburger-menu__password {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mmm-hamburger-menu__password input {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.mmm-hamburger-menu__password-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-bright, #fff);
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+.mmm-hamburger-menu__password-toggle:focus-visible {
+  outline: none;
+  border-color: rgba(127, 255, 212, 0.8);
+  box-shadow: 0 0 0 2px rgba(127, 255, 212, 0.25);
+}
+
+.mmm-hamburger-menu__password-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.mmm-hamburger-menu__password-toggle-label {
+  font-weight: 600;
+}
+
 .mmm-hamburger-menu__helper {
   width: 100%;
   color: var(--color-text-dimmed, #dcdcdc);

@@ -12,17 +12,18 @@ Display a solid Wi‑Fi logo as network signal for MorningMirror (and forks) and
 ## Installation (single copy/paste block)
 Run this on your Pi. Set `MIRROR_USER` if the MagicMirror/MorningMirror process runs as a different user (defaults to the current shell user):
 ```bash
+MIRROR_ROOT=${MIRROR_ROOT:-$HOME/MorningMirror} && \
 MIRROR_USER=${MIRROR_USER:-$(whoami)} && \
-cd ~/MorningMirror/modules && \
+cd "$MIRROR_ROOT/modules" && \
 rm -rf MMM-WIFI && \
 git clone https://github.com/pcheek13/MMM-WIFI.git && \
 cd MMM-WIFI && \
 npm install && \
-sudo install -m 0755 scripts/mm-set-wifi.sh /usr/local/sbin/mm-set-wifi.sh && \
-echo "${MIRROR_USER} ALL=(root) NOPASSWD: /usr/local/sbin/mm-set-wifi.sh" | sudo tee /etc/sudoers.d/magicmirror-wifi >/dev/null && \
+sudo install -m 0755 scripts/update-wifi.sh /usr/local/sbin/mm-update-wifi.sh && \
+echo "${MIRROR_USER} ALL=(root) NOPASSWD: /usr/local/sbin/mm-update-wifi.sh, $(pwd)/scripts/update-wifi.sh" | sudo tee /etc/sudoers.d/magicmirror-wifi >/dev/null && \
 sudo chmod 440 /etc/sudoers.d/magicmirror-wifi
 ```
-> The sudoers entry is tightly scoped to the helper script so the module can change Wi‑Fi without prompting for a password. NetworkManager will persist the credentials in its own connection profile.
+> The sudoers entry is tightly scoped to both the installed helper and the module-local helper so Wi‑Fi updates from the UI run without prompting for a password. NetworkManager will persist the credentials in its own connection profile.
 
 ## Configuration
 Add the module to `config/config.js`:
@@ -47,7 +48,7 @@ Add the module to `config/config.js`:
 | `thresholds` | `{ strong: 50, medium: 150, weak: 500 }` | Ping thresholds for strength |
 | `allowWifiUpdates` | `true` | Allow Wi‑Fi updates from the UI |
 | `settingsOnly` | `true` | Hide the DOM output; the module still broadcasts status to the settings panel |
-| `wifiCommand` | `{ executable: "sudo", args: ["/usr/local/sbin/mm-set-wifi.sh", "{ssid}", "{password}"], timeout: 20000, maxBuffer: 1024 * 1024 }` | Command the helper executes when credentials are submitted |
+| `wifiCommand` | `{ executable: "sudo", args: ["{modulePath}/scripts/update-wifi.sh", "{ssid}", "{password}"], timeout: 20000, maxBuffer: 1024 * 1024 }` | Command the helper executes when credentials are submitted |
 | `useSudoForWifiCommand` | `true` | If `wifiCommand.executable` is not already `sudo`, wrap it with `sudo` |
 
 ### Updating Wi‑Fi from the mirror
