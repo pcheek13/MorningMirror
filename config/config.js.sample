@@ -138,19 +138,6 @@ let config = {
       }
     },
     {
-      module: "weather",
-      position: "top_right",
-      config: {
-        type: "current",
-        apiKey: openWeatherApiKey,
-        lat: 0,
-        lon: 0,
-        location: "",
-        weatherProvider: "openweathermap",
-        useCorsProxy: false
-      }
-    },
-    {
       module: "MMM-WIFI",
       position: "bottom_right",
       config: {

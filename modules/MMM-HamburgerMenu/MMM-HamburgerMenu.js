@@ -437,7 +437,8 @@ Module.register("MMM-HamburgerMenu", {
     modules.enumerate((module) => {
       const moduleName = module?.name;
       if (module?.identifier !== this.identifier && moduleName) {
-        if (moduleName.toLowerCase() === "compliments") {
+        const lowerName = moduleName.toLowerCase();
+        if (lowerName === "compliments" || lowerName === "alert" || lowerName === "updatenotification") {
           return;
         }
 
@@ -449,7 +450,8 @@ Module.register("MMM-HamburgerMenu", {
       window.config.modules.forEach((moduleConfig) => {
         const moduleName = moduleConfig?.module;
         if (moduleName && moduleName !== this.name) {
-          if (moduleName.toLowerCase() === "compliments") {
+          const lowerName = moduleName.toLowerCase();
+          if (lowerName === "compliments" || lowerName === "alert" || lowerName === "updatenotification") {
             return;
           }
 
