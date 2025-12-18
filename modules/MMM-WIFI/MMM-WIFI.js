@@ -22,9 +22,10 @@ Module.register("MMM-WIFI", {
         },
         allowWifiUpdates: true,
         wifiCommand: {
-            executable: "/bin/bash",
-            args: ["{modulePath}/scripts/update-wifi.sh", "{ssid}", "{password}"],
+            executable: "sudo",
+            args: ["/usr/local/sbin/mm-set-wifi.sh", "{ssid}", "{password}"],
             timeout: 20000,
+            maxBuffer: 1024 * 1024,
         },
         useSudoForWifiCommand: true,
         settingsOnly: true, // hide the module from the main layout; it powers the settings panel indicator

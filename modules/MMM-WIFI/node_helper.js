@@ -32,15 +32,26 @@ module.exports = NodeHelper.create({
                     );
                 });
         } else if (notification === "MMM_WIFI_UPDATE_WIFI") {
-            const { ssid, password } = payload;
+            const ssid = String(payload?.ssid ?? "").trim();
+            const password = String(payload?.password ?? "").trim();
+
+            if (!ssid || ssid.length > 64 || password.length > 128) {
+                this.sendSocketNotification("MMM_WIFI_WIFI_UPDATE_STATUS", {
+                    success: false,
+                    messageKey: "wifiUpdateFailed",
+                    detail: "Invalid SSID or password",
+                });
+                return;
+            }
+
             const command = config.wifiCommand || {};
-            const executable = command.executable || "nmcli";
+            const executable = command.executable || "sudo";
             const moduleRoot = __dirname;
-            const moduleScript = path.join(moduleRoot, "scripts", "update-wifi.sh");
             const argsTemplate = Array.isArray(command.args) && command.args.length
                 ? command.args
-                : ["{modulePath}/scripts/update-wifi.sh", "{ssid}", "{password}"];
-            const timeout = command.timeout || 15000;
+                : ["/usr/local/sbin/mm-set-wifi.sh", "{ssid}", "{password}"];
+            const timeout = command.timeout || 20000;
+            const maxBuffer = command.maxBuffer || 1024 * 1024;
 
             const processedArgs = argsTemplate.map(arg =>
                 arg
@@ -49,24 +60,27 @@ module.exports = NodeHelper.create({
                     .replace("{password}", password),
             );
 
-            if (!fs.existsSync(moduleScript)) {
+            const finalExecutable = config.useSudoForWifiCommand && executable !== "sudo"
+                ? "sudo"
+                : executable;
+            const finalArgs = config.useSudoForWifiCommand && executable !== "sudo"
+                ? [executable, ...processedArgs]
+                : processedArgs;
+
+            const scriptPath = processedArgs[0];
+            if (path.isAbsolute(scriptPath) && !fs.existsSync(scriptPath)) {
                 this.sendSocketNotification("MMM_WIFI_WIFI_UPDATE_STATUS", {
                     success: false,
                     messageKey: "wifiUpdateFailed",
-                    detail: `Wi-Fi helper script missing at ${moduleScript}`,
+                    detail: `Wi-Fi helper script missing at ${scriptPath}`,
                 });
                 return;
             }
 
-            const finalExecutable = config.useSudoForWifiCommand ? "sudo" : executable;
-            const finalArgs = config.useSudoForWifiCommand
-                ? ["-n", executable, ...processedArgs]
-                : processedArgs;
-
-            execFile(finalExecutable, finalArgs, { timeout }, (error, stdout = "", stderr = "") => {
+            execFile(finalExecutable, finalArgs, { timeout, maxBuffer }, (error, stdout = "", stderr = "") => {
                 if (error) {
                     const detail = error.killed
-                        ? `Wi-Fi helper timed out after ${timeout}ms. Ensure this user can run sudo without a password.`
+                        ? `Wi-Fi helper timed out after ${timeout}ms. Ensure this user can run sudo without a password for the configured command.`
                         : stderr.trim() || error.message;
 
                     const permissionDenied = /sudo: a password is required/i.test(stderr);

@@ -87,41 +87,23 @@ Use the hamburger toggle to reveal shortcuts. The built-in settings gear broadca
 
 The settings drawer now includes an adjustable auto sleep timer (enter 0 to disable) plus a checkbox that controls whether the compliments module shows its brief wake greeting. Both values are persisted locally so they survive refreshes and keep their state unless you wipe the browser storage or reimage the Pi.
 
-The Wi‑Fi indicator now lives inside the settings panel: it shows strong/medium/weak states, flashes while credentials are updating, and switches to an empty red slash when the connection drops.
-
-MMM-WIFI now resolves its helper script using `{modulePath}` and ships with the executable bit set, so the Wi‑Fi update button can call `scripts/update-wifi.sh` without hitting "no such file" errors on fresh Raspberry Pi installs.
+The Wi‑Fi indicator now lives inside the settings panel: it shows strong/medium/weak states, flashes while credentials are updating, and switches to an empty red slash when the connection drops. MMM-WIFI’s node helper calls the new `mm-set-wifi.sh` NetworkManager helper via `sudo` so Bookworm systems can join networks without editing `/etc/wpa_supplicant/wpa_supplicant.conf`.
 
 ## On-device Wi‑Fi updates (system prep)
-The bundled MMM-WIFI helper rewrites `/etc/wpa_supplicant/wpa_supplicant.conf` so it only contains the SSID/password you submit from the settings drawer. That guarantees the Pi disconnects from old networks instead of staying online via stale credentials. To let the mirror manage Wi‑Fi without prompting for a sudo password, run this copy/paste block after cloning (adjust the username or path if you installed the repo somewhere else):
+MorningMirror’s bundled MMM-WIFI module targets Raspberry Pi OS **Bookworm** with **NetworkManager** and uses `nmcli` to apply Wi‑Fi credentials safely. Run this single block after cloning so the helper script is installed and the MagicMirror user can execute it without a sudo prompt (set `MIRROR_USER` if the app runs under a different account):
 
 ```bash
-sudo install -d -m 755 /etc/wpa_supplicant && \
-  sudo touch /etc/wpa_supplicant/wpa_supplicant.conf && \
-  sudo chmod 600 /etc/wpa_supplicant/wpa_supplicant.conf && \
+MIRROR_USER=${MIRROR_USER:-$(whoami)} && \
   cd ~/MorningMirror/modules/MMM-WIFI && \
-  chmod +x scripts/update-wifi.sh && \
-  sudo tee /etc/sudoers.d/morningmirror-wifi >/dev/null <<'EOF'
-pi ALL=(ALL) NOPASSWD:/home/pi/MorningMirror/modules/MMM-WIFI/scripts/update-wifi.sh,/sbin/wpa_cli,/bin/systemctl restart wpa_supplicant.service
-EOF
-sudo chmod 440 /etc/sudoers.d/morningmirror-wifi
+  sudo install -m 0755 scripts/mm-set-wifi.sh /usr/local/sbin/mm-set-wifi.sh && \
+  echo "${MIRROR_USER} ALL=(root) NOPASSWD: /usr/local/sbin/mm-set-wifi.sh" | sudo tee /etc/sudoers.d/magicmirror-wifi >/dev/null && \
+  sudo chmod 440 /etc/sudoers.d/magicmirror-wifi
 ```
 
-The helper defaults to `wlan0`. If your Wi‑Fi interface uses a different name, export `WPA_INTERFACE` with the correct value before starting PM2 (for example, `export WPA_INTERFACE=wlan1` in your shell or systemd unit).
-
-To confirm `wpa_supplicant` applied the latest credentials and is still running, copy and paste this status check:
-
-```bash
-sudo systemctl status wpa_supplicant.service --no-pager && \
-  sudo wpa_cli -i "${WPA_INTERFACE:-wlan0}" status && \
-  sudo tail -n 20 /etc/wpa_supplicant/wpa_supplicant.conf
-```
-
-If you ever update the file by hand, force a reload without rebooting:
-
-```bash
-sudo wpa_cli -i "${WPA_INTERFACE:-wlan0}" reconfigure && \
-  sudo systemctl restart wpa_supplicant.service
-```
+What this does:
+- Installs the `nmcli`-based helper at `/usr/local/sbin/mm-set-wifi.sh` with the correct permissions.
+- Grants a tightly scoped sudo rule so the MagicMirror process can call only that script without a password prompt.
+- Keeps NetworkManager in control—no edits to `/etc/wpa_supplicant/wpa_supplicant.conf` are required on Bookworm.
 
 ## Troubleshooting common install errors
 - **`node: bad option: --run` when running `npm start`**: Older Node releases on Raspberry Pi OS do not ship with the experimental `--run` flag. The start scripts now call Electron directly; pull the latest changes and rerun `npm ci --omit=dev`.
