@@ -47,7 +47,7 @@ If you ever close Electron, copy the included desktop shortcut to your Pi so you
 
 ```bash
 install -m 755 morningmirror.desktop ~/Desktop/ && \
-  sed -i "s#/home/pi#${HOME}#g" ~/Desktop/morningmirror.desktop
+  sed -i "s#/home/pcheek#${HOME}#g" ~/Desktop/morningmirror.desktop
 ```
 
 Double-clicking the icon runs `npm run start:x11` from your cloned repo.
@@ -102,7 +102,7 @@ The Wi‑Fi indicator now lives inside the settings panel: it shows strong/mediu
 MorningMirror’s bundled MMM-WIFI module targets Raspberry Pi OS **Bookworm** with **NetworkManager** and uses `nmcli` to apply Wi‑Fi credentials safely. Run this single block after cloning so the helper script is installed and the MagicMirror user can execute it without a sudo prompt (set `MIRROR_USER` if the app runs under a different account):
 
 ```bash
-MIRROR_ROOT=${MIRROR_ROOT:-/home/pi/MorningMirror} && \
+MIRROR_ROOT=${MIRROR_ROOT:-/home/pcheek/MorningMirror} && \
   MIRROR_USER=${MIRROR_USER:-$(whoami)} && \
   cd "$MIRROR_ROOT/modules/MMM-WIFI" && \
   sudo install -m 0755 scripts/mm-set-wifi.sh /usr/local/sbin/mm-set-wifi.sh && \
