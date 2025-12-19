@@ -12,7 +12,7 @@ Display a solid Wi‑Fi logo as network signal for MorningMirror (and forks) and
 ## Installation (single copy/paste block)
 Run this on your Pi. Set `MIRROR_USER` if the MagicMirror/MorningMirror process runs as a different user (defaults to the current shell user):
 ```bash
-MIRROR_ROOT=${MIRROR_ROOT:-/home/pi/MorningMirror} && \
+MIRROR_ROOT=${MIRROR_ROOT:-/home/pcheek/MorningMirror} && \
 MIRROR_USER=${MIRROR_USER:-$(whoami)} && \
 cd "$MIRROR_ROOT/modules" && \
 rm -rf MMM-WIFI && \
