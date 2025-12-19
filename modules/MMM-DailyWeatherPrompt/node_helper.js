@@ -1,5 +1,6 @@
 const NodeHelper = require("node_helper");
-const fetch = require("node-fetch");
+
+const fetch = globalThis.fetch || require("node-fetch");
 
 module.exports = NodeHelper.create({
   socketNotificationReceived(notification, payload) {
