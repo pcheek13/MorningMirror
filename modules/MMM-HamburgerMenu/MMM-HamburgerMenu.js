@@ -15,6 +15,7 @@ Module.register("MMM-HamburgerMenu", {
     wifiSsidPlaceholder: "Network name (SSID)",
     wifiPasswordPlaceholder: "Wi-Fi password",
     wifiSaveLabel: "Update Wi-Fi",
+    wifiPrivacyHelper: "Credentials are sent to MMM-WIFI and then cleared from this device.",
     locationLabel: "Daily weather location",
     locationPlaceholder: "City, ST or ZIP",
     locationSaveLabel: "Save location",
@@ -48,7 +49,6 @@ Module.register("MMM-HamburgerMenu", {
   },
 
   storageKey: "MMM-HamburgerMenu::profileName",
-  wifiStorageKey: "MMM-HamburgerMenu::wifiCredentials",
   locationStorageKey: "MMM-DailyWeatherPrompt::location",
   autoSleepStorageKey: "MMM-HamburgerMenu::autoSleepMinutes",
   complimentsToggleStorageKey: "MMM-HamburgerMenu::showComplimentsOnWake",
@@ -90,7 +90,6 @@ Module.register("MMM-HamburgerMenu", {
     this.sleepTimeout = null;
 
     this.loadProfileName();
-    this.loadWifiCredentials();
     this.loadWeatherLocation();
     this.loadAutoSleepMinutes();
     this.loadComplimentPreference();
@@ -151,33 +150,6 @@ Module.register("MMM-HamburgerMenu", {
     }
 
     localStorage.setItem(this.storageKey, name);
-  },
-
-  loadWifiCredentials() {
-    if (typeof localStorage === "undefined") {
-      return;
-    }
-
-    const stored = localStorage.getItem(this.wifiStorageKey);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        this.wifiCredentials = {
-          ssid: parsed.ssid || "",
-          password: parsed.password || "",
-        };
-      } catch (error) {
-        Log.error("Failed to parse stored Wi-Fi credentials", error);
-      }
-    }
-  },
-
-  persistWifiCredentials(credentials) {
-    if (typeof localStorage === "undefined") {
-      return;
-    }
-
-    localStorage.setItem(this.wifiStorageKey, JSON.stringify(credentials));
   },
 
   loadWeatherLocation() {
@@ -375,14 +347,16 @@ Module.register("MMM-HamburgerMenu", {
 
     this.wifiCredentials = { ssid, password };
     this.wifiStatus = "Sending Wi-Fi update";
-    this.persistWifiCredentials(this.wifiCredentials);
 
     this.sendNotification("WIFI_CREDENTIALS_UPDATED", {
       ssid,
       password,
     });
 
-    this.wifiStatus = "Wi-Fi update sent";
+    this.wifiCredentials = { ssid: "", password: "" };
+    ssidInput.value = "";
+    passwordInput.value = "";
+    this.wifiStatus = "Wi-Fi update sent to MMM-WIFI; credentials cleared locally";
     this.updateDom();
   },
 
@@ -880,6 +854,11 @@ Module.register("MMM-HamburgerMenu", {
     syncToggle();
     toggleWrapper.appendChild(toggleButton);
     form.appendChild(toggleWrapper);
+
+    const privacyHelper = document.createElement("div");
+    privacyHelper.className = "mmm-hamburger-menu__helper";
+    privacyHelper.textContent = this.config.wifiPrivacyHelper;
+    form.appendChild(privacyHelper);
 
     this.registerKeyboardInput(ssid, "wifi-ssid");
     this.registerKeyboardInput(password, "wifi-password");
