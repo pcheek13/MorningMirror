@@ -36,18 +36,28 @@ function createWindow () {
 	 * see https://www.electronjs.org/docs/latest/api/screen
 	 * Create a window that fills the screen's available work area.
 	 */
-	let electronSize = (800, 600);
+	const defaultElectronSize = { width: 800, height: 600 };
+	let electronSize = defaultElectronSize;
 	try {
-		electronSize = electron.screen.getPrimaryDisplay().workAreaSize;
+		const primaryDisplay = electron.screen?.getPrimaryDisplay?.();
+		if (primaryDisplay?.workAreaSize?.width && primaryDisplay?.workAreaSize?.height) {
+			electronSize = primaryDisplay.workAreaSize;
+		} else {
+			Log.warn("Primary display metadata missing width/height, using defaults ...");
+		}
 	} catch {
 		Log.warn("Could not get display size, using defaults ...");
 	}
 
-	let electronSwitchesDefaults = ["autoplay-policy", "no-user-gesture-required"];
-	app.commandLine.appendSwitch(...new Set(electronSwitchesDefaults, config.electronSwitches));
+	const electronSwitchesDefaults = ["autoplay-policy", "no-user-gesture-required"];
+	const configuredSwitches = Array.isArray(config.electronSwitches) ? config.electronSwitches : [];
+	const mergedSwitches = [...new Set([...electronSwitchesDefaults, ...configuredSwitches])];
+	for (const switchName of mergedSwitches) {
+		app.commandLine.appendSwitch(switchName);
+	}
 	let electronOptionsDefaults = {
-		width: electronSize.width,
-		height: electronSize.height,
+		width: electronSize?.width ?? defaultElectronSize.width,
+		height: electronSize?.height ?? defaultElectronSize.height,
 		icon: "mm2.png",
 		x: 0,
 		y: 0,
