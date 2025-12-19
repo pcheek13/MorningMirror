@@ -28,6 +28,14 @@ if (os.platform() !== "linux") {
 	process.exit(0);
 }
 
+if (!process.env.DISPLAY && !process.env.WAYLAND_DISPLAY) {
+	console.error(
+		"\nNo display server detected (DISPLAY or WAYLAND_DISPLAY is unset).\n" +
+		"Set DISPLAY=:0 for X11 or WAYLAND_DISPLAY=wayland-1 for Wayland before starting MorningMirror.\n"
+	);
+	process.exit(1);
+}
+
 const lddResult = spawnSync("ldd", [electronBinary], { encoding: "utf8" });
 
 // If ldd is unavailable, allow startup to continue instead of blocking.
@@ -54,4 +62,3 @@ console.error(
 	"    libxdamage1 libxrandr2\n"
 );
 process.exit(1);
-

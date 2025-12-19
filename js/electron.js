@@ -187,6 +187,20 @@ app.on("window-all-closed", function () {
 	}
 });
 
+app.on("child-process-gone", (event, details) => {
+	Log.error(
+		`Electron child process "${details.type ?? "unknown"}" exited (${details.reason ?? "no reason"}; ` +
+		`${details.exitCode !== null ? `code ${details.exitCode}` : `signal ${details.exitCode === null ? "unknown" : details.exitCode}`}).`
+	);
+
+	if (details.reason === "killed" || details.reason === "crashed") {
+		Log.error(
+			"Common causes: missing X11/Wayland display, GPU driver issues, or sandbox problems. " +
+			"Ensure DISPLAY or WAYLAND_DISPLAY is set and that the Electron runtime libraries are installed."
+		);
+	}
+});
+
 app.on("activate", function () {
 
 	/*
