@@ -56,6 +56,8 @@ Double-clicking the icon runs `npm run start:x11` from your cloned repo.
 - Settings drawer now includes per-module show/hide toggles that persist locally plus a built-in on-screen keyboard for every form field.
 - Compliments wake greeting that borrows your configured profile name and shows for 25 seconds when the mirror wakes.
 - Built-in auto sleep timer (15 minutes by default) and wake compliment toggle that are both adjustable from the on-screen settings and saved locally between sessions.
+- Orientation toggle in the settings drawer that flips the UI between horizontal and portrait without touching Raspberry Pi display settings.
+- One-tap MorningMirror updater in the settings drawer that runs `git pull` against the cloned repo so you can stay current without SSHing in.
 - Development tooling (ESLint, Prettier, Jest, Stylelint) included for rapid module creation.
 
 ## Core dependencies
@@ -86,6 +88,10 @@ When you enter a city/ZIP in the settings drawer, MMM-DailyWeatherPrompt geocode
 Use the hamburger toggle to reveal shortcuts. The built-in settings gear broadcasts `OPEN_SETTINGS_PANEL` so any module listening for configuration updates can react, and the profile field lets you enter a name that saves locally and pushes `PROFILE_UPDATED` to the compliments module. Add more menu entries by extending `extraButtons` in the hamburger menu config without editing the module source.
 
 The settings drawer now includes an adjustable auto sleep timer (enter 0 to disable) plus a checkbox that controls whether the compliments module shows its brief wake greeting. Both values are persisted locally so they survive refreshes and keep their state unless you wipe the browser storage or reimage the Pi.
+
+Use the orientation picker to rotate MorningMirror between horizontal and portrait layouts instantly; the choice is stored locally and reapplied on reload without changing the Pi’s global display rotation.
+
+Tap the update button to run a fast-forward `git pull` in your MorningMirror directory without leaving the touchscreen; the helper reports success or failure inline and keeps running even if the repo already matches origin.
 
 The Wi‑Fi indicator now lives inside the settings panel: it shows strong/medium/weak states, flashes while credentials are updating, and switches to an empty red slash when the connection drops. MMM-WIFI’s node helper calls the NetworkManager helper via `sudo` so Bookworm systems can join networks without editing `/etc/wpa_supplicant/wpa_supplicant.conf`. The helper now rescans for networks, creates or updates a profile for the SSID, and attempts to bring it up even for hidden networks or mobile hotspots that are not visible on the first scan.
 
