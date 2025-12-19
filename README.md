@@ -3,11 +3,14 @@
 MorningMirror is a streamlined, modular smart mirror platform ready to clone and run on a Raspberry Pi 5. The project keeps the familiar Magic Mirror experience while simplifying setup, trimming legacy references, and bundling the essentials you need to get a display running quickly.
 
 ## Quick install (Raspberry Pi 5)
-Copy and paste this single block on a clean Raspberry Pi 5 to install Node 20 from NodeSource, clone MorningMirror, install production dependencies (including Electron), copy the sample config, and start it with PM2 for boot persistence:
+Copy and paste this single block on a clean Raspberry Pi 5 to install the Electron/Chromium runtime libraries, Node 20 from NodeSource, and everything needed to launch MorningMirror with PM2 persistence:
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
-  sudo apt update && sudo apt install -y git nodejs && \
+  sudo apt update && sudo apt install -y git nodejs \
+    libatk1.0-0 libatk-bridge2.0-0 libnss3 libgbm1 libx11-xcb1 libxcb-dri3-0 \
+    libgtk-3-0 libasound2 libpangocairo-1.0-0 libatspi2.0-0 libdrm2 libxcomposite1 \
+    libxdamage1 libxrandr2 && \
   git clone https://github.com/pcheek13/MorningMirror.git && \
   cd MorningMirror && \
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev && \
@@ -118,6 +121,13 @@ What this does:
   ```bash
   rm -rf node_modules/electron ~/.cache/electron && \
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev
+  ```
+- **`error while loading shared libraries: libatk-1.0.so.0` (or similar) when running `npm start`**: Install the Chromium/Electron runtime dependencies and rerun the start command:
+  ```bash
+  sudo apt update && sudo apt install -y \
+    libatk1.0-0 libatk-bridge2.0-0 libnss3 libgbm1 libx11-xcb1 libxcb-dri3-0 \
+    libgtk-3-0 libasound2 libpangocairo-1.0-0 libatspi2.0-0 libdrm2 libxcomposite1 \
+    libxdamage1 libxrandr2
   ```
 - **`Cannot access 'config' before initialization` when starting Electron**: Update your config to the latest format by copying the sample again. Any customizations can be re-applied afterward:
   ```bash
