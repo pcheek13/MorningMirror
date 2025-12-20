@@ -7,10 +7,17 @@ module.exports = NodeHelper.create({
   },
 
   socketNotificationReceived(notification, payload = {}) {
-    if (notification !== "HAMBURGER_REBOOT") {
+    if (notification === "HAMBURGER_REBOOT") {
+      this.handleReboot(payload);
       return;
     }
 
+    if (notification === "HAMBURGER_PULL") {
+      this.handleGitPull(payload);
+    }
+  },
+
+  handleReboot(payload) {
     const command = payload.command || "sudo /sbin/reboot";
     const child = exec(command, (error, stdout = "", stderr = "") => {
       if (error) {
@@ -26,5 +33,25 @@ module.exports = NodeHelper.create({
     });
 
     child.unref();
+  },
+
+  handleGitPull(payload) {
+    const command =
+      payload.command ||
+      "cd ~/MorningMirror && git pull --ff-only";
+
+    exec(command, { env: process.env }, (error, stdout = "", stderr = "") => {
+      if (error) {
+        const detail = stderr.trim() || error.message;
+        this.sendSocketNotification("HAMBURGER_PULL_FAILED", {
+          message: detail,
+        });
+        return;
+      }
+
+      this.sendSocketNotification("HAMBURGER_PULL_FINISHED", {
+        message: stdout.trim(),
+      });
+    });
   },
 });

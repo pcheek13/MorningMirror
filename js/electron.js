@@ -1,6 +1,8 @@
 "use strict";
 
 const electron = require("electron");
+const fs = require("fs");
+const path = require("path");
 const core = require("./app");
 const Log = require("./logger");
 
@@ -8,6 +10,59 @@ const Log = require("./logger");
 let config = process.env.config ? JSON.parse(process.env.config) : {};
 // Module to control application life.
 const app = electron.app;
+
+function sandboxNeedsDisable () {
+	const forceSandbox = process.env.ELECTRON_FORCE_SANDBOX === "1";
+	if (forceSandbox) {
+		return { disable: false, reasons: [] };
+	}
+
+	const envDisable = process.env.ELECTRON_NO_SANDBOX === "1" || process.env.ELECTRON_FORCE_NO_SANDBOX === "1";
+	const runningAsRoot = typeof process.getuid === "function" && process.getuid() === 0;
+	const chromeSandboxPath = path.join(path.dirname(process.execPath), "chrome-sandbox");
+
+	let chromeSandboxExists = false;
+	let chromeSandboxIsSetuid = false;
+
+	try {
+		const stats = fs.statSync(chromeSandboxPath);
+		chromeSandboxExists = true;
+		chromeSandboxIsSetuid = stats.uid === 0 && (stats.mode & 0o4000) === 0o4000;
+	} catch (error) {
+		Log.warn(`Chrome sandbox helper missing at ${chromeSandboxPath}: ${error.message ?? error}. Falling back to --no-sandbox to avoid startup crashes.`);
+		return { disable: true, reasons: ["chrome-sandbox helper missing"] };
+	}
+
+	const userNamespacesDisabled = (() => {
+		try {
+			return fs.readFileSync("/proc/sys/kernel/unprivileged_userns_clone", "utf8").trim() === "0";
+		} catch {
+			return false;
+		}
+	})();
+
+	const reasons = [];
+	if (envDisable) {
+		reasons.push("ELECTRON_NO_SANDBOX override");
+	}
+	if (runningAsRoot) {
+		reasons.push("running as root");
+	}
+	if (!chromeSandboxIsSetuid && (userNamespacesDisabled || !chromeSandboxExists)) {
+		reasons.push("chrome-sandbox lacks setuid bit while user namespaces are disabled");
+	}
+
+	return { disable: envDisable || runningAsRoot || (!chromeSandboxIsSetuid && userNamespacesDisabled), reasons };
+}
+
+const sandboxStatus = sandboxNeedsDisable();
+if (sandboxStatus.disable) {
+	app.commandLine.appendSwitch("no-sandbox");
+	Log.warn(
+		`Disabling Chromium sandbox (${sandboxStatus.reasons.join("; ") || "compatibility fallback"}). ` +
+		"Set ELECTRON_FORCE_SANDBOX=1 after fixing chrome-sandbox permissions if you want to re-enable it."
+	);
+}
 
 /*
  * Per default electron is started with --disable-gpu flag, if you want the gpu enabled,
@@ -36,18 +91,28 @@ function createWindow () {
 	 * see https://www.electronjs.org/docs/latest/api/screen
 	 * Create a window that fills the screen's available work area.
 	 */
-	let electronSize = (800, 600);
+	const defaultElectronSize = { width: 800, height: 600 };
+	let electronSize = defaultElectronSize;
 	try {
-		electronSize = electron.screen.getPrimaryDisplay().workAreaSize;
+		const primaryDisplay = electron.screen?.getPrimaryDisplay?.();
+		if (primaryDisplay?.workAreaSize?.width && primaryDisplay?.workAreaSize?.height) {
+			electronSize = primaryDisplay.workAreaSize;
+		} else {
+			Log.warn("Primary display metadata missing width/height, using defaults ...");
+		}
 	} catch {
 		Log.warn("Could not get display size, using defaults ...");
 	}
 
-	let electronSwitchesDefaults = ["autoplay-policy", "no-user-gesture-required"];
-	app.commandLine.appendSwitch(...new Set(electronSwitchesDefaults, config.electronSwitches));
+	const electronSwitchesDefaults = ["autoplay-policy", "no-user-gesture-required"];
+	const configuredSwitches = Array.isArray(config.electronSwitches) ? config.electronSwitches : [];
+	const mergedSwitches = [...new Set([...electronSwitchesDefaults, ...configuredSwitches])];
+	for (const switchName of mergedSwitches) {
+		app.commandLine.appendSwitch(switchName);
+	}
 	let electronOptionsDefaults = {
-		width: electronSize.width,
-		height: electronSize.height,
+		width: electronSize?.width ?? defaultElectronSize.width,
+		height: electronSize?.height ?? defaultElectronSize.height,
 		icon: "mm2.png",
 		x: 0,
 		y: 0,
@@ -174,6 +239,20 @@ app.on("window-all-closed", function () {
 		app.quit();
 	} else {
 		createWindow();
+	}
+});
+
+app.on("child-process-gone", (event, details) => {
+	Log.error(
+		`Electron child process "${details.type ?? "unknown"}" exited (${details.reason ?? "no reason"}; ` +
+		`${details.exitCode !== null ? `code ${details.exitCode}` : `signal ${details.exitCode === null ? "unknown" : details.exitCode}`}).`
+	);
+
+	if (details.reason === "killed" || details.reason === "crashed") {
+		Log.error(
+			"Common causes: missing X11/Wayland display, GPU driver issues, or sandbox problems. " +
+			"Ensure DISPLAY or WAYLAND_DISPLAY is set and that the Electron runtime libraries are installed."
+		);
 	}
 });
 

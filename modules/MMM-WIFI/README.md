@@ -52,7 +52,7 @@ Add the module to `config/config.js`:
 | `useSudoForWifiCommand` | `true` | If `wifiCommand.executable` is not already `sudo`, wrap it with `sudo` |
 
 ### Updating Wi‑Fi from the mirror
-When `allowWifiUpdates` is true, entering an SSID/password in the settings panel sends them to `node_helper`, which runs `/usr/local/sbin/mm-set-wifi.sh` via `sudo`. The helper calls `nmcli dev wifi connect "<ssid>" password "<password>"`, turning Wi‑Fi on if needed. Errors from `nmcli` are surfaced back to the UI; passwords are never logged.
+When `allowWifiUpdates` is true, entering an SSID/password in the settings panel sends them to `node_helper`, which runs `/usr/local/sbin/mm-set-wifi.sh` via `sudo`. The helper turns Wi‑Fi on, rescans for networks, ensures a NetworkManager profile exists for the SSID (creating or updating it with the password), and then brings that profile up—even if the network was not visible in the initial scan (hidden networks and mobile hotspots are handled). Errors from `nmcli` are surfaced back to the UI; passwords are never logged.
 
 ### Bookworm specifics
 - NetworkManager owns Wi‑Fi; do **not** edit `/etc/wpa_supplicant/wpa_supplicant.conf`.

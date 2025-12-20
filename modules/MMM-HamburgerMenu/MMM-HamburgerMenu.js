@@ -15,6 +15,7 @@ Module.register("MMM-HamburgerMenu", {
     wifiSsidPlaceholder: "Network name (SSID)",
     wifiPasswordPlaceholder: "Wi-Fi password",
     wifiSaveLabel: "Update Wi-Fi",
+    wifiPrivacyHelper: "Credentials are sent to MMM-WIFI and then cleared from this device.",
     locationLabel: "Daily weather location",
     locationPlaceholder: "City, ST or ZIP",
     locationSaveLabel: "Save location",
@@ -28,6 +29,7 @@ Module.register("MMM-HamburgerMenu", {
     rebootPendingStatus: "Rebooting...",
     rebootFailedStatus: "Reboot failed. Check logs.",
     rebootCommand: "sudo /sbin/reboot",
+    systemLabel: "System",
     weatherOverrideLabel: "Weather",
     weatherOverrideHelper:
       "Pick a temporary weather scene for the full-screen effects.",
@@ -41,6 +43,18 @@ Module.register("MMM-HamburgerMenu", {
     weatherOverrideCloudyLabel: "Clouds",
     weatherOverrideFogLabel: "Fog",
     weatherOverrideSnowLabel: "Snow",
+    orientationLabel: "Orientation",
+    orientationHelper: "Rotate MorningMirror without changing the Pi display settings.",
+    orientationHorizontalLabel: "Horizontal",
+    orientationPortraitLabel: "Portrait",
+    defaultOrientation: "horizontal",
+    updateLabel: "Update MorningMirror",
+    updateHelper: "Runs a git pull in the MorningMirror folder. Restart after if needed.",
+    updateConfirmMessage: "Run git pull now? This may restart files or show conflicts if you modified the code.",
+    updateCommand: "cd ~/MorningMirror && git pull --ff-only",
+    updatePendingStatus: "Checking for updates...",
+    updateSuccessStatus: "Code updated. Restart if new dependencies were installed.",
+    updateFailedStatus: "Update failed. Check logs.",
     autoSleepMinutes: 15,
     showComplimentsOnWake: true,
     showVirtualKeyboard: true,
@@ -48,11 +62,11 @@ Module.register("MMM-HamburgerMenu", {
   },
 
   storageKey: "MMM-HamburgerMenu::profileName",
-  wifiStorageKey: "MMM-HamburgerMenu::wifiCredentials",
   locationStorageKey: "MMM-DailyWeatherPrompt::location",
   autoSleepStorageKey: "MMM-HamburgerMenu::autoSleepMinutes",
   complimentsToggleStorageKey: "MMM-HamburgerMenu::showComplimentsOnWake",
   moduleVisibilityStorageKey: "MMM-HamburgerMenu::moduleVisibility",
+  orientationStorageKey: "MMM-HamburgerMenu::orientation",
   sleepLockString: "MMM-HamburgerMenu::sleep",
   moduleToggleLockString: "MMM-HamburgerMenu::module-toggle",
 
@@ -71,6 +85,10 @@ Module.register("MMM-HamburgerMenu", {
     this.showComplimentsOnWake = this.config.showComplimentsOnWake;
     this.weatherOverride = "";
     this.weatherOverrideStatus = "";
+    this.mirrorOrientation = this.normalizeOrientation(this.config.defaultOrientation);
+    this.orientationStatus = "";
+    this.updateStatus = "";
+    this.isUpdating = false;
     this.moduleVisibility = {};
     this.availableModuleNames = [];
     this.openSettingsSections = new Set();
@@ -90,11 +108,11 @@ Module.register("MMM-HamburgerMenu", {
     this.sleepTimeout = null;
 
     this.loadProfileName();
-    this.loadWifiCredentials();
     this.loadWeatherLocation();
     this.loadAutoSleepMinutes();
     this.loadComplimentPreference();
     this.loadModuleVisibility();
+    this.loadOrientation();
     this.captureAvailableModules();
     this.applyModuleVisibility();
 
@@ -127,6 +145,22 @@ Module.register("MMM-HamburgerMenu", {
       }
 
       this.updateDom();
+      return;
+    }
+
+    if (notification === "HAMBURGER_PULL_FINISHED") {
+      this.isUpdating = false;
+      const detail = payload?.message;
+      this.updateStatus = detail || this.config.updateSuccessStatus;
+      this.updateDom();
+      return;
+    }
+
+    if (notification === "HAMBURGER_PULL_FAILED") {
+      this.isUpdating = false;
+      const detail = payload?.message;
+      this.updateStatus = detail || this.config.updateFailedStatus;
+      this.updateDom();
     }
   },
 
@@ -151,33 +185,6 @@ Module.register("MMM-HamburgerMenu", {
     }
 
     localStorage.setItem(this.storageKey, name);
-  },
-
-  loadWifiCredentials() {
-    if (typeof localStorage === "undefined") {
-      return;
-    }
-
-    const stored = localStorage.getItem(this.wifiStorageKey);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        this.wifiCredentials = {
-          ssid: parsed.ssid || "",
-          password: parsed.password || "",
-        };
-      } catch (error) {
-        Log.error("Failed to parse stored Wi-Fi credentials", error);
-      }
-    }
-  },
-
-  persistWifiCredentials(credentials) {
-    if (typeof localStorage === "undefined") {
-      return;
-    }
-
-    localStorage.setItem(this.wifiStorageKey, JSON.stringify(credentials));
   },
 
   loadWeatherLocation() {
@@ -259,6 +266,43 @@ Module.register("MMM-HamburgerMenu", {
       this.moduleVisibilityStorageKey,
       JSON.stringify(this.moduleVisibility)
     );
+  },
+
+  normalizeOrientation(value) {
+    return value === "portrait" ? "portrait" : "horizontal";
+  },
+
+  loadOrientation() {
+    if (typeof localStorage !== "undefined") {
+      const stored = localStorage.getItem(this.orientationStorageKey);
+      if (stored) {
+        this.mirrorOrientation = this.normalizeOrientation(stored);
+      }
+    }
+
+    this.applyOrientationClass({ notify: false });
+  },
+
+  persistOrientation(orientation) {
+    if (typeof localStorage === "undefined") {
+      return;
+    }
+
+    localStorage.setItem(this.orientationStorageKey, orientation);
+  },
+
+  applyOrientationClass({ notify = false } = {}) {
+    const normalized = this.normalizeOrientation(this.mirrorOrientation);
+    this.mirrorOrientation = normalized;
+
+    if (typeof document !== "undefined" && document.body) {
+      document.body.classList.toggle("orientation-horizontal", normalized === "horizontal");
+      document.body.classList.toggle("orientation-portrait", normalized === "portrait");
+    }
+
+    if (notify) {
+      this.sendNotification("MIRROR_ORIENTATION_CHANGED", { orientation: normalized });
+    }
   },
 
   persistComplimentPreference(value) {
@@ -375,14 +419,16 @@ Module.register("MMM-HamburgerMenu", {
 
     this.wifiCredentials = { ssid, password };
     this.wifiStatus = "Sending Wi-Fi update";
-    this.persistWifiCredentials(this.wifiCredentials);
 
     this.sendNotification("WIFI_CREDENTIALS_UPDATED", {
       ssid,
       password,
     });
 
-    this.wifiStatus = "Wi-Fi update sent";
+    this.wifiCredentials = { ssid: "", password: "" };
+    ssidInput.value = "";
+    passwordInput.value = "";
+    this.wifiStatus = "Wi-Fi update sent to MMM-WIFI; credentials cleared locally";
     this.updateDom();
   },
 
@@ -449,6 +495,21 @@ Module.register("MMM-HamburgerMenu", {
     this.updateDom();
   },
 
+  handleOrientationChange(selection) {
+    const normalized = this.normalizeOrientation(selection);
+    this.mirrorOrientation = normalized;
+    this.persistOrientation(normalized);
+    this.applyOrientationClass({ notify: true });
+
+    const label =
+      normalized === "portrait"
+        ? this.config.orientationPortraitLabel
+        : this.config.orientationHorizontalLabel;
+
+    this.orientationStatus = `${label} layout applied`;
+    this.updateDom();
+  },
+
   handleSleepSubmit(input) {
     const minutes = Number.parseInt((input?.value || "").trim(), 10);
 
@@ -476,6 +537,24 @@ Module.register("MMM-HamburgerMenu", {
       ? "Compliments show at wake"
       : "Compliments stay visible without wake greeting";
     this.applyComplimentPreference();
+    this.updateDom();
+  },
+
+  handleUpdate() {
+    if (this.isUpdating) {
+      return;
+    }
+
+    const confirmed = window.confirm(this.config.updateConfirmMessage);
+    if (!confirmed) {
+      return;
+    }
+
+    this.isUpdating = true;
+    this.updateStatus = this.config.updatePendingStatus;
+    this.sendSocketNotification("HAMBURGER_PULL", {
+      command: this.config.updateCommand,
+    });
     this.updateDom();
   },
 
@@ -881,6 +960,11 @@ Module.register("MMM-HamburgerMenu", {
     toggleWrapper.appendChild(toggleButton);
     form.appendChild(toggleWrapper);
 
+    const privacyHelper = document.createElement("div");
+    privacyHelper.className = "mmm-hamburger-menu__helper";
+    privacyHelper.textContent = this.config.wifiPrivacyHelper;
+    form.appendChild(privacyHelper);
+
     this.registerKeyboardInput(ssid, "wifi-ssid");
     this.registerKeyboardInput(password, "wifi-password");
 
@@ -1006,6 +1090,68 @@ Module.register("MMM-HamburgerMenu", {
     return form;
   },
 
+  renderOrientationControls({ includeHeading = true } = {}) {
+    const form = document.createElement("form");
+    form.className = "mmm-hamburger-menu__orientation";
+
+    if (includeHeading) {
+      const label = document.createElement("div");
+      label.className = "mmm-hamburger-menu__section-title";
+      label.textContent = this.config.orientationLabel;
+      form.appendChild(label);
+    }
+
+    const options = [
+      { value: "horizontal", label: this.config.orientationHorizontalLabel },
+      { value: "portrait", label: this.config.orientationPortraitLabel },
+    ];
+
+    const list = document.createElement("div");
+    list.className = "mmm-hamburger-menu__orientation-options";
+
+    options.forEach((option) => {
+      const label = document.createElement("label");
+      label.className = "mmm-hamburger-menu__orientation-option";
+
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = `${this.identifier}-orientation`;
+      input.value = option.value;
+      input.checked = this.mirrorOrientation === option.value;
+
+      const text = document.createElement("span");
+      text.className = "mmm-hamburger-menu__orientation-label";
+      text.textContent = option.label;
+
+      label.appendChild(input);
+      label.appendChild(text);
+      list.appendChild(label);
+    });
+
+    form.appendChild(list);
+
+    const helper = document.createElement("div");
+    helper.className = "mmm-hamburger-menu__helper";
+    helper.textContent = this.config.orientationHelper;
+    form.appendChild(helper);
+
+    if (this.orientationStatus) {
+      const status = document.createElement("div");
+      status.className = "mmm-hamburger-menu__status";
+      status.textContent = this.orientationStatus;
+      form.appendChild(status);
+    }
+
+    form.addEventListener("change", (event) => {
+      const target = event.target;
+      if (target?.name === `${this.identifier}-orientation`) {
+        this.handleOrientationChange(target.value);
+      }
+    });
+
+    return form;
+  },
+
   renderExtraButtons(container) {
     if (!Array.isArray(this.config.extraButtons)) {
       return;
@@ -1073,6 +1219,13 @@ Module.register("MMM-HamburgerMenu", {
         "weather",
         this.config.weatherOverrideLabel,
         () => this.renderWeatherOverrideForm({ includeHeading: false })
+      )
+    );
+    forms.appendChild(
+      this.renderCollapsibleSection(
+        "orientation",
+        this.config.orientationLabel,
+        () => this.renderOrientationControls({ includeHeading: false })
       )
     );
     forms.appendChild(
@@ -1153,8 +1306,33 @@ Module.register("MMM-HamburgerMenu", {
     if (includeHeading) {
       const title = document.createElement("div");
       title.className = "mmm-hamburger-menu__section-title";
-      title.textContent = this.config.rebootLabel;
+      title.textContent = this.config.systemLabel || this.config.rebootLabel;
       wrapper.appendChild(title);
+    }
+
+    if (this.config.updateHelper) {
+      const helper = document.createElement("div");
+      helper.className = "mmm-hamburger-menu__helper";
+      helper.textContent = this.config.updateHelper;
+      wrapper.appendChild(helper);
+    }
+
+    const updateButton = document.createElement("button");
+    updateButton.type = "button";
+    updateButton.className = "mmm-hamburger-menu__save";
+    updateButton.textContent = this.config.updateLabel;
+    updateButton.disabled = this.isUpdating;
+    if (this.isUpdating) {
+      updateButton.classList.add("is-busy");
+    }
+    updateButton.addEventListener("click", () => this.handleUpdate());
+    wrapper.appendChild(updateButton);
+
+    if (this.updateStatus) {
+      const status = document.createElement("div");
+      status.className = "mmm-hamburger-menu__status";
+      status.textContent = this.updateStatus;
+      wrapper.appendChild(status);
     }
 
     if (this.config.rebootHelper) {
