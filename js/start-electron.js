@@ -59,6 +59,7 @@ const verifyElectronBinary = () => {
 };
 
 const detectDisplay = () => {
+
 	if (os.platform() !== "linux") {
 		return { env: { ...process.env }, mode: "default" };
 	}
@@ -67,17 +68,33 @@ const detectDisplay = () => {
 	const uid = typeof process.getuid === "function" ? process.getuid() : 1000;
 	const defaultWayland = env.WAYLAND_DISPLAY || "wayland-1";
 	const waylandSocket = path.join("/run/user", String(uid), defaultWayland);
-	const wantsWayland =
-		env.WAYLAND_DISPLAY || env.XDG_SESSION_TYPE === "wayland" || fs.existsSync(waylandSocket);
+	const wantsWayland = env.WAYLAND_DISPLAY || env.XDG_SESSION_TYPE === "wayland";
+	const hasWaylandSocket = fs.existsSync(waylandSocket);
 
-	if (wantsWayland) {
+	if (wantsWayland && hasWaylandSocket) {
 		env.WAYLAND_DISPLAY = defaultWayland;
 		return { env, mode: "wayland" };
 	}
 
+	if (wantsWayland && !hasWaylandSocket) {
+		console.error(
+			"\nWAYLAND_DISPLAY is set but no Wayland socket was found at " +
+			`${waylandSocket}. Start a graphical session or unset XDG_SESSION_TYPE/WAYLAND_DISPLAY.\n`
+		);
+		process.exit(1);
+	}
+
 	const defaultDisplay = env.DISPLAY || ":0";
 	const xSocket = path.join("/tmp/.X11-unix", `X${defaultDisplay.replace(":", "")}`);
-	const hasX11 = env.DISPLAY || fs.existsSync(xSocket);
+	const hasX11 = fs.existsSync(xSocket);
+
+	if (env.DISPLAY && !hasX11) {
+		console.error(
+			"\nDISPLAY is set but no X11 socket was found at " +
+			`${xSocket}. Start X11 or clear DISPLAY before re-running MorningMirror.\n`
+		);
+		process.exit(1);
+	}
 
 	if (hasX11) {
 		env.DISPLAY = defaultDisplay;
