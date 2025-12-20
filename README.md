@@ -25,6 +25,9 @@ The `npm ci --omit=dev` step installs only the runtime dependencies (Electron in
 
 If PM2 prints a `pm2 startup ...` command, run it exactly as shown to register the service with systemd. After a reboot, the `morningmirror` process will start automatically.
 
+### Display auto-detection
+`npm start` now auto-detects a running display server on Raspberry Pi OS Bookworm and chooses Wayland (`WAYLAND_DISPLAY=wayland-1`) when available, falling back to X11 (`DISPLAY=:0`) if no Wayland socket is present. If no display server is running, the start script stops with a clear message so you can start a graphical session before launching Electron.
+
 ## Manage PM2 auto start
 Use these commands when you need to disable or re-enable PM2 boot startup for MorningMirror:
 
@@ -128,14 +131,7 @@ What this does:
     libgtk-3-0 libasound2 libpangocairo-1.0-0 libatspi2.0-0 libdrm2 libxcomposite1 \
     libxdamage1 libxrandr2
   ```
-- **Electron exits with signal `SIGTRAP` right after `npm start`**: The display server is usually missing. Make sure you are in a graphical session and export a display variable before starting:
-  ```bash
-  # X11
-  export DISPLAY=:0
-  # Wayland (Bookworm defaults)
-  export WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-wayland-1}
-  npm start
-  ```
+- **Electron exits with signal `SIGTRAP` right after `npm start`**: The display server is usually missing. The start script already searches for Wayland first (`wayland-1`) and falls back to X11 (`:0`); if neither socket exists, start a graphical session or set the variable manually, then rerun `npm start`.
 - **`Cannot access 'config' before initialization` when starting Electron**: Update your config to the latest format by copying the sample again. Any customizations can be re-applied afterward:
   ```bash
   cd ~/MorningMirror && \
