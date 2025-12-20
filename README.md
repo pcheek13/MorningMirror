@@ -2,8 +2,8 @@
 
 MorningMirror is a streamlined, modular smart mirror platform ready to clone and run on a Raspberry Pi 5. The project keeps a familiar smart mirror experience while simplifying setup, trimming legacy references, and bundling the essentials you need to get a display running quickly.
 
-## Quick install (Raspberry Pi 5)
-Copy and paste this single block on a clean Raspberry Pi 5 to install the Electron/Chromium runtime libraries, Node 20 from NodeSource, and everything needed to launch MorningMirror with PM2 persistence:
+## Quick install (Raspberry Pi 5, fresh image)
+Copy and paste this single block on a clean Raspberry Pi 5. It installs Node 20 from NodeSource, pulls the repo, installs only the runtime dependencies (including Electron), copies the sample config, and registers MorningMirror with PM2 so it survives reboots:
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
@@ -21,7 +21,12 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
   pm2 startup
 ```
 
-The `npm ci --omit=dev` step installs only the runtime dependencies (Electron included) to keep downloads lean on the Pi. Removing `ELECTRON_SKIP_BINARY_DOWNLOAD` ensures Electron actually downloads its platform binary so the app can start.
+What this does:
+- Installs system libraries Electron needs to start on Raspberry Pi OS Bookworm.
+- Clones MorningMirror into `~/MorningMirror`.
+- Runs `npm ci --omit=dev` so only production dependencies (Electron included) are downloaded for faster installs on the Pi.
+- Copies `config/config.js.sample` to `config/config.js` so you have a working config file.
+- Starts MorningMirror under PM2 and saves the process list so it restarts after a reboot.
 
 If PM2 prints a `pm2 startup ...` command, run it exactly as shown to register the service with systemd. After a reboot, the `morningmirror` process will start automatically.
 
@@ -78,14 +83,23 @@ MorningMirror ships with a curated set of node modules to mirror the original ex
 - Quality tooling: ESLint, Stylelint, Prettier, Markdownlint, CSpell, Jest, Playwright
 
 ## Configuration
-1. Copy `config/config.js.sample` to `config/config.js`:
+1. Copy `config/config.js.sample` to `config/config.js` (already done in the quick install block above; re-run if you need a clean slate):
    ```bash
    cp config/config.js.sample config/config.js
    ```
-2. Update modules, API keys, or layout regions within `config/config.js` to suit your display.
+2. Update modules, API keys, or layout regions within `config/config.js` to suit your display. At minimum, set your OpenWeatherMap key:
+   - Set `OPENWEATHERMAP_API_KEY` in your shell before starting PM2:
+     ```bash
+     export OPENWEATHERMAP_API_KEY="<your_api_key>"
+     pm2 restart morningmirror
+     ```
+     or edit `MMM-DynamicWeather`’s `api_key` directly in `config/config.js`.
    - The default MMM-DynamicWeather block now reads the `OPENWEATHERMAP_API_KEY` environment variable automatically when MorningMirror runs under Node; if that variable is missing, the key stays blank so the browser never throws a `process is not defined` error. Set the variable before starting PM2 or edit `api_key` directly in the config file.
    - The sample clock config no longer uses the deprecated `secondsColor` option that triggered warnings in the log. To style seconds, target the CSS hooks in `modules/default/clock/clock_styles.css` (e.g., `.clock-second-digital` or `.clock-second`).
-3. Restart MorningMirror to apply changes (`npm run start:x11` or restart the PM2 process).
+3. Restart MorningMirror to apply changes:
+   ```bash
+   pm2 restart morningmirror
+   ```
 
 The default configuration keeps the clock in the top center, MMM-DailyWeatherPrompt in the top-left, the compliments module in the middle-center region, and MMM-DynamicWeather rendering full-screen weather effects. A new MMM-HamburgerMenu floats in the `bottom_right` region with a three-line toggle that opens a compact panel for touch-friendly controls (including the Wi‑Fi indicator and credential update form). Set your OpenWeatherMap API key in `MMM-DynamicWeather` and optionally prefill `location` for `MMM-DailyWeatherPrompt` if you do not want the on-screen prompt.
 
