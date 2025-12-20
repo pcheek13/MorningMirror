@@ -1,6 +1,6 @@
 # MorningMirror
 
-MorningMirror is a streamlined, modular smart mirror platform ready to clone and run on a Raspberry Pi 5. The project keeps the familiar Magic Mirror experience while simplifying setup, trimming legacy references, and bundling the essentials you need to get a display running quickly.
+MorningMirror is a streamlined, modular smart mirror platform ready to clone and run on a Raspberry Pi 5. The project keeps a familiar smart mirror experience while simplifying setup, trimming legacy references, and bundling the essentials you need to get a display running quickly.
 
 ## Quick install (Raspberry Pi 5)
 Copy and paste this single block on a clean Raspberry Pi 5 to install the Electron/Chromium runtime libraries, Node 20 from NodeSource, and everything needed to launch MorningMirror with PM2 persistence:
@@ -53,7 +53,7 @@ install -m 755 morningmirror.desktop ~/Desktop/ && \
 Double-clicking the icon runs `npm run start:x11` from your cloned repo.
 
 ## Key features
-- Modular layout with server and client components ready for custom modules, mirroring the familiar Magic Mirror scaffolding.
+- Modular layout with server and client components ready for custom modules, mirroring the familiar smart mirror scaffolding.
 - Electron-powered shell for kiosk-style full-screen operation.
 - Default modules preconfigured to work out of the box: MMM-DynamicWeather, MMM-DailyWeatherPrompt, a headless MMM-WIFI service that powers the settings Wi‑Fi indicator, clock, alert, update notification, compliments, and a touch-friendly hamburger launcher in the bottom-right corner.
 - Settings drawer now includes per-module show/hide toggles that persist locally plus a built-in on-screen keyboard for every form field.
@@ -99,21 +99,20 @@ Tap the update button to run a fast-forward `git pull` in your MorningMirror dir
 The Wi‑Fi indicator now lives inside the settings panel: it shows strong/medium/weak states, flashes while credentials are updating, and switches to an empty red slash when the connection drops. MMM-WIFI’s node helper calls the NetworkManager helper via `sudo` so Bookworm systems can join networks without editing `/etc/wpa_supplicant/wpa_supplicant.conf`. The helper now rescans for networks, creates or updates a profile for the SSID, and attempts to bring it up even for hidden networks or mobile hotspots that are not visible on the first scan.
 
 ## On-device Wi‑Fi updates (system prep)
-MorningMirror’s bundled MMM-WIFI module targets Raspberry Pi OS **Bookworm** with **NetworkManager** and uses `nmcli` to apply Wi‑Fi credentials safely. Run this single block after cloning so the helper script is installed and the MagicMirror user can execute it without a sudo prompt (set `MIRROR_USER` if the app runs under a different account):
+MorningMirror’s bundled MMM-WIFI module targets Raspberry Pi OS **Bookworm** with **NetworkManager** and uses `nmcli` to apply Wi‑Fi credentials safely. Run this single block after cloning so the helper script is installed and the MorningMirror user can execute it without a sudo prompt (set `MIRROR_USER` if the app runs under a different account):
 
-```bash
-MIRROR_ROOT=${MIRROR_ROOT:-/home/pcheek/MorningMirror} && \
+  ```bash
   MIRROR_USER=${MIRROR_USER:-$(whoami)} && \
-  cd "$MIRROR_ROOT/modules/MMM-WIFI" && \
-  sudo install -m 0755 scripts/mm-set-wifi.sh /usr/local/sbin/mm-set-wifi.sh && \
-  echo "${MIRROR_USER} ALL=(root) NOPASSWD: /usr/local/sbin/mm-set-wifi.sh, $(pwd)/scripts/update-wifi.sh, $(pwd)/scripts/mm-set-wifi.sh" | sudo tee /etc/sudoers.d/magicmirror-wifi >/dev/null && \
-  sudo chmod 440 /etc/sudoers.d/magicmirror-wifi
-```
+    cd ~/MorningMirror/modules/MMM-WIFI && \
+    sudo install -m 0755 scripts/mm-set-wifi.sh /usr/local/sbin/mm-set-wifi.sh && \
+    echo "${MIRROR_USER} ALL=(root) NOPASSWD: /usr/local/sbin/mm-set-wifi.sh" | sudo tee /etc/sudoers.d/morningmirror-wifi >/dev/null && \
+    sudo chmod 440 /etc/sudoers.d/morningmirror-wifi
+  ```
 
 What this does:
 - Installs the `nmcli`-based helper at `/usr/local/sbin/mm-set-wifi.sh` with the correct permissions.
-- Grants a tightly scoped sudo rule so the MagicMirror process can call only the Wi‑Fi helpers (global and module-local) without a password prompt.
-- Keeps NetworkManager in control—no edits to `/etc/wpa_supplicant/wpa_supplicant.conf` are required on Bookworm. Hidden networks and hotspots are handled by creating/updating a profile and attempting to bring it online after a rescan.
+- Grants a tightly scoped sudo rule so the MorningMirror process can call only that script without a password prompt.
+- Keeps NetworkManager in control—no edits to `/etc/wpa_supplicant/wpa_supplicant.conf` are required on Bookworm.
 
 ## Troubleshooting common install errors
 - **`node: bad option: --run` when running `npm start`**: Older Node releases on Raspberry Pi OS do not ship with the experimental `--run` flag. The start scripts now call Electron directly; pull the latest changes and rerun `npm ci --omit=dev`.
