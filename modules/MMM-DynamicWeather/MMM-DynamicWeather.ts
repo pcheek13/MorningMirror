@@ -1,4 +1,4 @@
-/* Magic Mirror
+/* MorningMirror
  * Module: MMM-DynamicWeather
  *
  * By Scott Lewis - https://github.com/scottcl88/MMM-DynamicWeather

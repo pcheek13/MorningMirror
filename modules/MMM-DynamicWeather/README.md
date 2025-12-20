@@ -3,7 +3,7 @@
 <p align="center">
   <a href="https://github.com/scottcl88/MMM-DynamicWeather"><img src="https://img.shields.io/maintenance/yes/2024?style=flat-square" alt="Maintained"/></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
-  <a href="https://github.com/MorningMirrorOrg/MorningMirror"><img src="https://img.shields.io/badge/module%20of-Magic%20Mirror-%234f46e5?style=flat-square" alt="Part of Magic Mirror"/></a>
+  <a href="https://github.com/MorningMirrorOrg/MorningMirror"><img src="https://img.shields.io/badge/module%20of-MorningMirror-%234f46e5?style=flat-square" alt="Part of MorningMirror"/></a>
   <a href="https://www.npmjs.com/package/mmm-dynamicweather"><img src="https://img.shields.io/npm/v/mmm-dynamicweather" alt="npm package mmm-dynamicweather"/></a>
 </p>
 

@@ -3,10 +3,10 @@
 An always-visible bottom-right control for MorningMirror. It keeps the sleep toggle and settings gear visible (icon-only to save space) and opens a compact settings tray with Wi-Fi credentials (for MMM-WIFI), a profile name field (for `compliments`), and the `MMM-DailyWeatherPrompt` location.
 
 ## Installation (copy/paste ready for Raspberry Pi)
-This repository already includes the module. From your MagicMirror installation, clone/update MorningMirror and install dependencies in one go:
+This repository already includes the module. From your MorningMirror installation, clone/update MorningMirror and install dependencies in one go:
 
 ```bash
-cd ~/MagicMirror/modules \
+cd ~/MorningMirror/modules \
   && git clone https://github.com/your-org/MorningMirror.git || (cd MorningMirror && git pull) \
   && cd MorningMirror \
   && npm install
