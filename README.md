@@ -3,7 +3,7 @@
 MorningMirror is a streamlined, modular smart mirror platform ready to clone and run on a Raspberry Pi 5.
 
 ## Raspberry Pi 5 one-shot setup (Bookworm)
-Copy and paste this block on a clean Raspberry Pi 5. It installs Node 20, pulls the repo, installs runtime deps, sets up Wi‑Fi helper permissions, and registers MorningMirror with PM2 so it starts on boot:
+Copy and paste this block on a clean Raspberry Pi 5. It installs Node 20, pulls the repo, installs runtime deps, sets up Wi‑Fi helper permissions, and registers MorningMirror with PM2 so it starts on boot. The block also prepares your desktop session so Electron has a display and PM2 inherits it on startup:
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
@@ -16,16 +16,23 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev && \
   cp config/config.js.sample config/config.js && \
   MIRROR_USER="pcheek" && \
+  sudo raspi-config nonint do_boot_behaviour B4 && \
+  sudo raspi-config nonint do_wayland W1 && \
   cd modules/MMM-WIFI && \
   sudo install -m 0755 scripts/mm-set-wifi.sh /usr/local/sbin/mm-set-wifi.sh && \
   echo "${MIRROR_USER} ALL=(root) NOPASSWD: /usr/local/sbin/mm-set-wifi.sh" | sudo tee /etc/sudoers.d/morningmirror-wifi >/dev/null && \
   sudo chmod 440 /etc/sudoers.d/morningmirror-wifi && \
   cd ../../ && \
   sudo npm install -g pm2 && \
-  pm2 start npm --name morningmirror -- start && \
+  DISPLAY=:0 XAUTHORITY=/home/${MIRROR_USER}/.Xauthority pm2 start npm --name morningmirror -- start && \
   pm2 save && \
   pm2 startup
 ```
+
+What the extra lines do:
+- `raspi-config nonint do_boot_behaviour B4` enables desktop auto-login so X/Wayland is running when MorningMirror starts.
+- `raspi-config nonint do_wayland W1` keeps the default Wayland session active on Raspberry Pi OS Bookworm (Electron will fall back to X11 if it is not available).
+- The `DISPLAY` and `XAUTHORITY` exports ensure PM2 inherits your display socket and Xauthority cookie when it spawns Electron. Keep the `MIRROR_USER` value aligned with the account that owns the repo.
 
 Set your OpenWeatherMap API key before restarting the app:
 
@@ -146,6 +153,26 @@ What this does:
     libxdamage1 libxrandr2
   ```
 - **Electron exits with signal `SIGTRAP` right after `npm start`**: The display server is usually missing. The start script already searches for Wayland first (`wayland-1`) and falls back to X11 (`:0`); if neither socket exists, start a graphical session or set the variable manually, then rerun `npm start`.
+- **`Display is set but no X11 socket was found at /tmp/.X11-unix/X0`**: The DISPLAY variable points to X11 but no desktop session is running. Fix it by enabling desktop auto-login, rebooting, and letting PM2 inherit the display variables:
+  ```bash
+  sudo raspi-config nonint do_boot_behaviour B4 && sudo reboot
+  # after reboot, a desktop session will create /tmp/.X11-unix/X0
+  cd ~/MorningMirror
+  export DISPLAY=:0
+  export XAUTHORITY=/home/pcheek/.Xauthority   # replace with your user if different
+  pm2 restart morningmirror
+  ```
+  If you are testing from SSH without a desktop session, unset the display so Electron skips launching: `unset DISPLAY && npm start`.
+- **Electron exits with `Trace/breakpoint trap` on Raspberry Pi 5**: This happens when Electron cannot talk to a running Wayland/X11 session. Enable desktop auto-login, reboot once, and ensure PM2 sees the display variables:
+  ```bash
+  sudo raspi-config nonint do_boot_behaviour B4 && sudo raspi-config nonint do_wayland W1 && sudo reboot
+  # after reboot
+  cd ~/MorningMirror
+  export DISPLAY=:0
+  export XAUTHORITY=/home/pcheek/.Xauthority
+  pm2 restart morningmirror
+  ```
+  If you use a different account, replace `/home/pcheek` with that user’s home path.
 - **`Cannot access 'config' before initialization` when starting Electron**: Update your config to the latest format by copying the sample again. Any customizations can be re-applied afterward:
   ```bash
   cd ~/MorningMirror && \
