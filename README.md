@@ -153,6 +153,16 @@ What this does:
     libxdamage1 libxrandr2
   ```
 - **Electron exits with signal `SIGTRAP` right after `npm start`**: The display server is usually missing. The start script already searches for Wayland first (`wayland-1`) and falls back to X11 (`:0`); if neither socket exists, start a graphical session or set the variable manually, then rerun `npm start`.
+- **`Display is set but no X11 socket was found at /tmp/.X11-unix/X0`**: The DISPLAY variable points to X11 but no desktop session is running. Fix it by enabling desktop auto-login, rebooting, and letting PM2 inherit the display variables:
+  ```bash
+  sudo raspi-config nonint do_boot_behaviour B4 && sudo reboot
+  # after reboot, a desktop session will create /tmp/.X11-unix/X0
+  cd ~/MorningMirror
+  export DISPLAY=:0
+  export XAUTHORITY=/home/pcheek/.Xauthority   # replace with your user if different
+  pm2 restart morningmirror
+  ```
+  If you are testing from SSH without a desktop session, unset the display so Electron skips launching: `unset DISPLAY && npm start`.
 - **Electron exits with `Trace/breakpoint trap` on Raspberry Pi 5**: This happens when Electron cannot talk to a running Wayland/X11 session. Enable desktop auto-login, reboot once, and ensure PM2 sees the display variables:
   ```bash
   sudo raspi-config nonint do_boot_behaviour B4 && sudo raspi-config nonint do_wayland W1 && sudo reboot
