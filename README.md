@@ -162,7 +162,7 @@ What this does:
   export XAUTHORITY=/home/pcheek/.Xauthority   # replace with your user if different
   pm2 restart morningmirror
   ```
-  If you are testing from SSH without a desktop session, unset the display so Electron skips launching: `unset DISPLAY && npm start`.
+  If you are testing from SSH without a desktop session, unset the display so Electron skips launching: `unset DISPLAY && npm start` (note the lowercase `start`).
 - **Electron exits with `Trace/breakpoint trap` on Raspberry Pi 5**: This happens when Electron cannot talk to a running Wayland/X11 session. Enable desktop auto-login, reboot once, and ensure PM2 sees the display variables:
   ```bash
   sudo raspi-config nonint do_boot_behaviour B4 && sudo raspi-config nonint do_wayland W1 && sudo reboot
