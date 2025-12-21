@@ -1,9 +1,9 @@
 # MorningMirror
 
-MorningMirror is a streamlined, modular smart mirror platform ready to clone and run on a Raspberry Pi 5. The project keeps a familiar smart mirror experience while simplifying setup, trimming legacy references, and bundling the essentials you need to get a display running quickly.
+MorningMirror is a streamlined, modular smart mirror platform ready to clone and run on a Raspberry Pi 5.
 
-## Quick install (Raspberry Pi 5, fresh image)
-Copy and paste this single block on a clean Raspberry Pi 5. It installs Node 20 from NodeSource, pulls the repo, installs only the runtime dependencies (including Electron), copies the sample config, and registers MorningMirror with PM2 so it survives reboots:
+## Raspberry Pi 5 one-shot setup (Bookworm)
+Copy and paste this block on a clean Raspberry Pi 5. It installs Node 20, pulls the repo, installs runtime deps, sets up Wi‑Fi helper permissions, and registers MorningMirror with PM2 so it starts on boot:
 
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
@@ -15,23 +15,23 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
   cd MorningMirror && \
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --omit=dev && \
   cp config/config.js.sample config/config.js && \
+  MIRROR_USER="pcheek" && \
+  cd modules/MMM-WIFI && \
+  sudo install -m 0755 scripts/mm-set-wifi.sh /usr/local/sbin/mm-set-wifi.sh && \
+  echo "${MIRROR_USER} ALL=(root) NOPASSWD: /usr/local/sbin/mm-set-wifi.sh" | sudo tee /etc/sudoers.d/morningmirror-wifi >/dev/null && \
+  sudo chmod 440 /etc/sudoers.d/morningmirror-wifi && \
+  cd ../../ && \
   sudo npm install -g pm2 && \
   pm2 start npm --name morningmirror -- start && \
   pm2 save && \
   pm2 startup
 ```
 
-What this does:
-- Installs system libraries Electron needs to start on Raspberry Pi OS Bookworm.
-- Clones MorningMirror into `~/MorningMirror`.
-- Runs `npm ci --omit=dev` so only production dependencies (Electron included) are downloaded for faster installs on the Pi.
-- Copies `config/config.js.sample` to `config/config.js` so you have a working config file.
-- Starts MorningMirror under PM2 and saves the process list so it restarts after a reboot.
+Set your OpenWeatherMap API key before restarting the app:
 
-If PM2 prints a `pm2 startup ...` command, run it exactly as shown to register the service with systemd. After a reboot, the `morningmirror` process will start automatically.
-
-### Display auto-detection
-`npm start` now auto-detects a running display server on Raspberry Pi OS Bookworm and chooses Wayland (`WAYLAND_DISPLAY=wayland-1`) when available, falling back to X11 (`DISPLAY=:0`) if no Wayland socket is present. If no display server is running, the start script stops with a clear message so you can start a graphical session before launching Electron.
+```bash
+export OPENWEATHERMAP_API_KEY="<your_api_key>" && pm2 restart morningmirror
+```
 
 ## Manage PM2 auto start
 Use these commands when you need to disable or re-enable PM2 boot startup for MorningMirror:
@@ -116,10 +116,10 @@ Tap the update button to run a fast-forward `git pull` in your MorningMirror dir
 The Wi‑Fi indicator now lives inside the settings panel: it shows strong/medium/weak states, flashes while credentials are updating, and switches to an empty red slash when the connection drops. MMM-WIFI’s node helper calls the NetworkManager helper via `sudo` so Bookworm systems can join networks without editing `/etc/wpa_supplicant/wpa_supplicant.conf`. The helper now rescans for networks, creates or updates a profile for the SSID, and attempts to bring it up even for hidden networks or mobile hotspots that are not visible on the first scan.
 
 ## On-device Wi‑Fi updates (system prep)
-MorningMirror’s bundled MMM-WIFI module targets Raspberry Pi OS **Bookworm** with **NetworkManager** and uses `nmcli` to apply Wi‑Fi credentials safely. Run this single block after cloning so the helper script is installed and the MorningMirror user can execute it without a sudo prompt (set `MIRROR_USER` if the app runs under a different account):
+MorningMirror’s bundled MMM-WIFI module targets Raspberry Pi OS **Bookworm** with **NetworkManager** and uses `nmcli` to apply Wi‑Fi credentials safely. Run this single block after cloning so the helper script is installed and the MorningMirror user `pcheek` can execute it without a sudo prompt:
 
   ```bash
-  MIRROR_USER=${MIRROR_USER:-$(whoami)} && \
+  MIRROR_USER="pcheek" && \
     cd ~/MorningMirror/modules/MMM-WIFI && \
     sudo install -m 0755 scripts/mm-set-wifi.sh /usr/local/sbin/mm-set-wifi.sh && \
     echo "${MIRROR_USER} ALL=(root) NOPASSWD: /usr/local/sbin/mm-set-wifi.sh" | sudo tee /etc/sudoers.d/morningmirror-wifi >/dev/null && \

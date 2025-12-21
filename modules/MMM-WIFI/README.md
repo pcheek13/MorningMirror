@@ -10,10 +10,10 @@ Display a solid Wi‑Fi logo as network signal for MorningMirror (and forks) and
 - `nmcli` (NetworkManager) available on Raspberry Pi OS Bookworm
 
 ## Installation (single copy/paste block)
-Run this on your Pi. Set `MIRROR_USER` if the MorningMirror process runs as a different user (defaults to the current shell user):
+Run this on your Pi as the `pcheek` user (adjust `MIRROR_USER` only if you run MorningMirror under a different account):
 ```bash
 MIRROR_ROOT=${MIRROR_ROOT:-/home/pcheek/MorningMirror} && \
-MIRROR_USER=${MIRROR_USER:-$(whoami)} && \
+MIRROR_USER=${MIRROR_USER:-pcheek} && \
 cd "$MIRROR_ROOT/modules" && \
 rm -rf MMM-WIFI && \
 git clone https://github.com/pcheek13/MMM-WIFI.git && \
@@ -62,5 +62,5 @@ When `allowWifiUpdates` is true, entering an SSID/password in the settings panel
 ## Troubleshooting
 - **Permission denied / sudo prompt**: ensure the sudoers entry exists and matches the user running MorningMirror.
 - **nmcli not found**: install NetworkManager (`sudo apt install network-manager`) or adjust `wifiCommand` to a different backend (e.g., `raspi-config nonint do_wifi_ssid_passphrase`).
-- **Different user service**: if you run MorningMirror under `pi` (or a systemd service user), re-run the install snippet with `MIRROR_USER` set to that user so sudoers matches.
+- **Different user service**: if you run MorningMirror under an account other than `pcheek`, re-run the install snippet with `MIRROR_USER` set to that user so sudoers matches.
 - **Command shows `{modulePath}/scripts/update-wifi.sh`**: upgrade to the latest module (or copy the updated `node_helper.js`) so the helper resolves `{modulePath}` to the module directory automatically—even if the placeholder was left untouched in your config.
