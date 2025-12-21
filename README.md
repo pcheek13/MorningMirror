@@ -163,6 +163,18 @@ What this does:
   pm2 restart morningmirror
   ```
   If you are testing from SSH without a desktop session, unset the display so Electron skips launching: `unset DISPLAY && npm start` (note the lowercase `start`).
+- **Repeated `Display is set...` or `Trace/breakpoint trap` even after enabling auto-login**: Make sure a graphical session is running and that the user who owns the repo is logged into it at least once so `.Xauthority` exists. Then launch from that session (or export the session values over SSH):
+  ```bash
+  # On the Pi’s desktop terminal (best for first run)
+  cd ~/MorningMirror && npm start
+
+  # If you must start from SSH, borrow the desktop session env for the same user:
+  export DISPLAY=:0
+  export XAUTHORITY=/home/pcheek/.Xauthority   # replace if you use another user
+  export XDG_RUNTIME_DIR=/run/user/$(id -u)
+  pm2 restart morningmirror
+  ```
+  If a monitor/HDMI dongle is unplugged, plug one in or attach a HDMI dummy plug so the GPU stack initializes; otherwise Electron cannot create buffers and logs `gbm_wrapper` dma_buf errors.
 - **Electron exits with `Trace/breakpoint trap` on Raspberry Pi 5**: This happens when Electron cannot talk to a running Wayland/X11 session. Enable desktop auto-login, reboot once, and ensure PM2 sees the display variables:
   ```bash
   sudo raspi-config nonint do_boot_behaviour B4 && sudo raspi-config nonint do_wayland W1 && sudo reboot
