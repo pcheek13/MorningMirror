@@ -2,7 +2,7 @@
 Type=Application
 Name=MorningMirror
 Comment=Launch the MorningMirror smart mirror experience
-Exec=/bin/bash -lc 'cd "$HOME/MorningMirror" && npm run start:x11'
+Exec=/bin/bash -lc 'cd "$HOME/MorningMirror" && npm start'
 Icon=/home/pcheek/MorningMirror/mm2.png
 Terminal=false
 Categories=Utility;System;

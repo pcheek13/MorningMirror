@@ -1,6 +1,6 @@
 # MorningMirror
 
-MorningMirror is a streamlined, modular smart mirror platform ready to clone and run on a Raspberry Pi 5.
+MorningMirror is a streamlined, modular smart mirror platform ready to clone and run on a Raspberry Pi 5 as a full MagicMirror²-compatible module set.
 
 ## Raspberry Pi 5 one-shot setup (Bookworm)
 Copy and paste this block on a clean Raspberry Pi 5. It installs Node 20, pulls the repo, installs runtime deps, sets up Wi‑Fi helper permissions, and registers MorningMirror with PM2 so it starts on boot. The block also prepares your desktop session so Electron has a display and PM2 inherits it on startup:
@@ -17,7 +17,6 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
   cp config/config.js.sample config/config.js && \
   MIRROR_USER="pcheek" && \
   sudo raspi-config nonint do_boot_behaviour B4 && \
-  sudo raspi-config nonint do_wayland W1 && \
   cd modules/MMM-WIFI && \
   sudo install -m 0755 scripts/mm-set-wifi.sh /usr/local/sbin/mm-set-wifi.sh && \
   echo "${MIRROR_USER} ALL=(root) NOPASSWD: /usr/local/sbin/mm-set-wifi.sh" | sudo tee /etc/sudoers.d/morningmirror-wifi >/dev/null && \
@@ -31,7 +30,6 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
 
 What the extra lines do:
 - `raspi-config nonint do_boot_behaviour B4` enables desktop auto-login so X/Wayland is running when MorningMirror starts.
-- `raspi-config nonint do_wayland W1` keeps the default Wayland session active on Raspberry Pi OS Bookworm (Electron will fall back to X11 if it is not available).
 - The `DISPLAY` and `XAUTHORITY` exports ensure PM2 inherits your display socket and Xauthority cookie when it spawns Electron. Keep the `MIRROR_USER` value aligned with the account that owns the repo.
 
 Set your OpenWeatherMap API key before restarting the app:
@@ -65,7 +63,7 @@ install -m 755 morningmirror.desktop ~/Desktop/ && \
   sed -i "s#/home/pcheek#${HOME}#g" ~/Desktop/morningmirror.desktop
 ```
 
-Double-clicking the icon runs `npm run start:x11` from your cloned repo.
+Double-clicking the icon runs `npm start` from your cloned repo.
 
 ## Key features
 - Modular layout with server and client components ready for custom modules, mirroring the familiar smart mirror scaffolding.
@@ -123,20 +121,12 @@ Tap the update button to run a fast-forward `git pull` in your MorningMirror dir
 The Wi‑Fi indicator now lives inside the settings panel: it shows strong/medium/weak states, flashes while credentials are updating, and switches to an empty red slash when the connection drops. MMM-WIFI’s node helper calls the NetworkManager helper via `sudo` so Bookworm systems can join networks without editing `/etc/wpa_supplicant/wpa_supplicant.conf`. The helper now rescans for networks, creates or updates a profile for the SSID, and attempts to bring it up even for hidden networks or mobile hotspots that are not visible on the first scan.
 
 ## On-device Wi‑Fi updates (system prep)
-MorningMirror’s bundled MMM-WIFI module targets Raspberry Pi OS **Bookworm** with **NetworkManager** and uses `nmcli` to apply Wi‑Fi credentials safely. Run this single block after cloning so the helper script is installed and the MorningMirror user `pcheek` can execute it without a sudo prompt:
-
-  ```bash
-  MIRROR_USER="pcheek" && \
-    cd ~/MorningMirror/modules/MMM-WIFI && \
-    sudo install -m 0755 scripts/mm-set-wifi.sh /usr/local/sbin/mm-set-wifi.sh && \
-    echo "${MIRROR_USER} ALL=(root) NOPASSWD: /usr/local/sbin/mm-set-wifi.sh" | sudo tee /etc/sudoers.d/morningmirror-wifi >/dev/null && \
-    sudo chmod 440 /etc/sudoers.d/morningmirror-wifi
-  ```
-
-What this does:
+MorningMirror’s bundled MMM-WIFI module targets Raspberry Pi OS **Bookworm** with **NetworkManager** and uses `nmcli` to apply Wi‑Fi credentials safely. The one-shot install block above already:
 - Installs the `nmcli`-based helper at `/usr/local/sbin/mm-set-wifi.sh` with the correct permissions.
 - Grants a tightly scoped sudo rule so the MorningMirror process can call only that script without a password prompt.
 - Keeps NetworkManager in control—no edits to `/etc/wpa_supplicant/wpa_supplicant.conf` are required on Bookworm.
+
+If you ever need to refresh those permissions after changing usernames or wiping `/etc/sudoers.d`, rerun the Wi‑Fi section from the one-shot block with the updated `MIRROR_USER` value.
 
 ## Troubleshooting common install errors
 - **`node: bad option: --run` when running `npm start`**: Older Node releases on Raspberry Pi OS do not ship with the experimental `--run` flag. The start scripts now call Electron directly; pull the latest changes and rerun `npm ci --omit=dev`.
